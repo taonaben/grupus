@@ -17,7 +17,8 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path
+from workspace.urls import urlpatterns as workspace_urls
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-]
+] + workspace_urls

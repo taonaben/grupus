@@ -1,11 +1,18 @@
 from django.db import models
 from user.models import User
 import uuid
+import string
+import random
 
 # Create your models here.
 
 
 class Workspace(models.Model):
+
+    def generate_access_code():
+        """Generate a random 8 character access code with uppercase letters and numbers"""
+        chars = string.ascii_uppercase + string.digits
+        return ''.join(random.choices(chars, k=8))
 
     # core fields
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -19,7 +26,7 @@ class Workspace(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     # visibility and access
-    access_code = models.CharField(max_length=100, unique=True)
+    access_code = models.CharField(max_length=100, unique=True, default=generate_access_code)
     is_public = models.BooleanField(default=False)
     requires_approval = models.BooleanField(default=True)
     max_members = models.PositiveIntegerField(default=100)
@@ -31,8 +38,10 @@ class Workspace(models.Model):
 
     # rules & restrictions
     content_guidelines = models.TextField(blank=True, null=True)
-    rules = models.JSONField(default=list, blank=True)
+    rules = models.JSONField(default=list, blank=True, null=True)
 
+        
+    
     def __str__(self):
         return self.name
 
