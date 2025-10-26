@@ -49,9 +49,10 @@ INSTALLED_APPS = [
     "drf_yasg",
     "channels",
     "channels_redis",
+
     # "rest_framework_simplejwt.token_blacklist",
     # "silk",
-    # "drf_spectacular",
+    "drf_spectacular",
     # "django_filters",
     # "django_celery_beat",
     # "corsheaders",

@@ -16,9 +16,41 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularSwaggerView,
+    SpectacularRedocView,
+)
 from workspace.urls import urlpatterns as workspace_urls
+
+
+app_urlpatterns = [
+    path("workspace/", include(workspace_urls)),
+]
+
+third_party_urlpatterns = [
+
+    ## JWT Auth
+    path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+
+    ## Schema and Documentation
+    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
+    # optional ui:
+    path("api/schema/swagger-ui/", SpectacularSwaggerView.as_view(), name="swagger-ui"),
+    path("api/schema/redoc/", SpectacularRedocView.as_view(), name="redoc"),
+]
+
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-] + workspace_urls
+    # Include app-specific URLs
+    path("", include(app_urlpatterns)),
+    # Include third-party URLs
+    path("", include(third_party_urlpatterns)),
+]
