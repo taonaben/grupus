@@ -27,10 +27,12 @@ from drf_spectacular.views import (
     SpectacularRedocView,
 )
 from workspace.urls import urlpatterns as workspace_urls
+from group.urls import urlpatterns as group_urls
 
 
 app_urlpatterns = [
     path("workspace/", include(workspace_urls)),
+    path("group/", include(group_urls)),
 ]
 
 third_party_urlpatterns = [

@@ -5,7 +5,6 @@ import string
 import random
 import time
 
-# Create your models here.
 
 
 class Workspace(models.Model):
