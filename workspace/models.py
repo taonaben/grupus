@@ -3,6 +3,7 @@ from user.models import User
 import uuid
 import string
 import random
+import time
 
 # Create your models here.
 
@@ -10,23 +11,43 @@ import random
 class Workspace(models.Model):
 
     def generate_access_code():
-        """Generate a random 8 character access code with uppercase letters and numbers"""
+        MAX_ATTEMPTS = 10  
         chars = string.ascii_uppercase + string.digits
-        return ''.join(random.choices(chars, k=8))
+
+        for attempt in range(MAX_ATTEMPTS):
+            # Generate code with pattern: XXXX-XXXX
+            code = (
+                "".join(random.choices(chars, k=4))
+                + "-"
+                + "".join(random.choices(chars, k=4))
+            )
+
+            # Check if code already exists
+            if not Workspace.objects.filter(access_code=code).exists():
+                return code
+
+        # If we couldn't generate a unique code after MAX_ATTEMPTS
+        timestamp = hex(int(time.time()))[2:]
+        return f"{timestamp[:4]}-{timestamp[4:8]}".upper()
 
     # core fields
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
     created_by = models.ForeignKey(
-        User, on_delete=models.SET_NULL, related_name="workspaces",  null=True,
+        User,
+        on_delete=models.SET_NULL,
+        related_name="workspaces",
+        null=True,
         blank=True,
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     # visibility and access
-    access_code = models.CharField(max_length=100, unique=True, default=generate_access_code)
+    access_code = models.CharField(
+        max_length=100, unique=True, default=generate_access_code
+    )
     is_public = models.BooleanField(default=False)
     requires_approval = models.BooleanField(default=True)
     max_members = models.PositiveIntegerField(default=100)
@@ -40,8 +61,6 @@ class Workspace(models.Model):
     content_guidelines = models.TextField(blank=True, null=True)
     rules = models.JSONField(default=list, blank=True, null=True)
 
-        
-    
     def __str__(self):
         return self.name
 
@@ -64,7 +83,7 @@ class SpaceMember(models.Model):
     joined_at = models.DateTimeField(auto_now_add=True)
     last_seen = models.DateTimeField(auto_now=True)
     contribution_score = models.IntegerField(default=0)
-    custom_permissions = models.JSONField(default=dict, blank=True)
+    custom_permissions = models.JSONField(default=dict, blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
 
     class Meta:

@@ -16,3 +16,29 @@ class WorkspaceSerializer(serializers.ModelSerializer):
             "channel_count",
             "group_count",
         )
+
+
+class SpaceMemberSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SpaceMember
+
+        fields = [
+            "id",
+            "workspace",
+            "user",
+            "role",
+            "is_banned",
+            "joined_at",
+            "last_seen",
+            "contribution_score",
+            "custom_permissions",
+            "notes",
+        ]
+
+        read_only_fields = (
+            "workspace",
+            "user",
+            "id",
+            "joined_at",
+            "last_seen",
+        )
