@@ -9,6 +9,7 @@ class WorkspaceSerializer(serializers.ModelSerializer):
 
         read_only_fields = (
             "id",
+            "created_by",
             "created_at",
             "access_code",
             "member_count",

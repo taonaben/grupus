@@ -1,7 +1,8 @@
 from django.urls import path
-from .views import WorkspaceList
+import workspace.views as views
 
 urlpatterns = [
     # path("admin/", admin.site.urls),
-    path("workspaces/", WorkspaceList.as_view(), name="workspace-list"),
+    path("create/", views.CreateWorkspaceView.as_view(), name="create-workspace"),
+    path("list/", views.WorkspaceList.as_view(), name="workspace-list"),
 ]
