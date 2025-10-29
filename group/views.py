@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import generics
 from .models import Group, GroupMember
+from workspace.models import Workspace
 from .serializers import GroupSerializer, GroupMemberSerializer
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
@@ -87,6 +88,38 @@ class GroupList(generics.ListAPIView):
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class GroupDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Group.objects.all()
+    permission_classes = [IsAuthenticated]
+    serializer_class = GroupSerializer
+    lookup_field = "id"
+
+    def delete(self, request, *args, **kwargs):
+        group = self.get_object()
+
+        if group.created_by != request.user and not request.user.is_staff:
+            return Response(
+                {"detail": "You do not have permission to delete this group."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        return self.destroy(request, *args, **kwargs)
+
+    def put(self, request, *args, **kwargs):
+        group = self.get_object()
+
+        if group.created_by != request.user and not request.user.is_staff:
+            return Response(
+                {"detail": "You do not have permission to update this group."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        return self.update(request, *args, **kwargs)
+
+    def patch(self, request, *args, **kwargs):
+        return super().patch(request, *args, **kwargs)
 
 
 # ------- G R O U P   M E M B E R S   V I E W S ----------

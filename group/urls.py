@@ -12,4 +12,8 @@ urlpatterns = [
     path("create/", views.CreateGroupView.as_view(), name="create-group"),
     # List groups
     path("list/", views.GroupList.as_view(), name="list-groups"),
+    path("<uuid:id>/", views.GroupDetailView.as_view(), name="group-detail"),
+    # Update and delete group
+    # path("<uuid:id>/update/", views.GroupDetailView.as_view(), name="update-group"),
+    # path("<uuid:id>/delete/", views.GroupDetailView.as_view(), name="delete-group"),")
 ]
