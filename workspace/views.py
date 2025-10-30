@@ -157,7 +157,7 @@ class CreateSpaceMemberView(generics.CreateAPIView):
 class SpaceMembersList(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = SpaceMemberSerializer
-    lookup_field = "workspace_id"
+    
 
     def get_queryset(self):
         workspace_id = self.kwargs.get("workspace_id")

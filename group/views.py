@@ -124,18 +124,74 @@ class GroupDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 # ------- G R O U P   M E M B E R S   V I E W S ----------
 
-# class CreateGroupMemberView(generics.CreateAPIView):
-#     queryset = GroupMember.objects.all()
-#     serializer_class = GroupMemberSerializer
-#     permission_classes = [IsAuthenticated]
 
-#     def create(self, request, *args, **kwargs):
-#         serializer = self.get_serializer(data=request.data)
-#         serializer.is_valid(raise_exception=True)
+class CreateGroupMemberView(generics.CreateAPIView):
+    # queryset = GroupMember.objects.all()
+    serializer_class = GroupMemberSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = "access_code"
 
-#         # Create the group member with the current user as creator
-#         group_member = serializer.save()
+    def create(self, request, *args, **kwargs):
+        access_code = self.kwargs.get("access_code")
+        if not access_code:
+            return Response(
+                {"detail": "Access code is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-#         return Response(
-#             self.get_serializer(group_member).data, status=status.HTTP_201_CREATED
-#         )
+        try:
+            group = Group.objects.get(access_code=access_code)
+        except Group.DoesNotExist:
+            return Response(
+                {"detail": "Group not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+        if GroupMember.objects.filter(user=request.user, group=group).exists():
+            return Response(
+                {"detail": "You are already a member of this group."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if group.member_count >= group.member_limit:
+            return Response(
+                {"detail": "This group has reached its member limit."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        group_member = serializer.save(
+            user=request.user,
+            group=group,
+            role=GroupMember.Role.MEMBER,
+        )
+
+        group.member_count += 1
+        group.save(update_fields=["member_count"])
+
+        return Response(
+            self.get_serializer(group_member).data, status=status.HTTP_201_CREATED
+        )
+
+
+class GroupMemberList(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = GroupMemberSerializer
+
+    def get_queryset(self):
+        group_id = self.kwargs.get("group_id")
+        return (
+            GroupMember.objects.filter(group__id=group_id, is_banned=False)
+            .select_related("user")
+            .order_by("-joined_at")
+        )
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
