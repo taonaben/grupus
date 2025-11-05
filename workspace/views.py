@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import generics
 from .models import Workspace, SpaceMember
+from channel.models import Channel
 from .serializers import WorkspaceSerializer, SpaceMemberSerializer
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.pagination import PageNumberPagination, CursorPagination
@@ -31,6 +32,13 @@ class CreateWorkspaceView(generics.CreateAPIView):
             user=request.user,
             workspace=workspace,
             role=SpaceMember.Role.ADMIN,  # Using the enum from model
+        )
+
+        # create default channel
+        Channel.objects.create(
+            name="general",
+            workspace=workspace,
+            created_by=request.user,
         )
 
         # Update the member count

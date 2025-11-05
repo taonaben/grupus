@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework import generics
 from .models import Group, GroupMember
 from workspace.models import Workspace
+from channel.models import Channel
 from .serializers import GroupSerializer, GroupMemberSerializer
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
@@ -45,6 +46,13 @@ class CreateGroupView(generics.CreateAPIView):
         # Make creator an admin member
         GroupMember.objects.create(
             user=request.user, group=group, role=GroupMember.Role.ADMIN
+        )
+
+        # create default channel
+        Channel.objects.create(
+            name="general",
+            group=group,
+            created_by=request.user,
         )
 
         # Update member count
