@@ -20,19 +20,16 @@ class ChannelSerializer(serializers.ModelSerializer):
         workspace = data.get("workspace")
         group = data.get("group")
 
-        # Ensure at least one parent is specified
         if not workspace and not group:
             raise serializers.ValidationError(
                 {"error": "Either workspace or group must be specified"}
             )
 
-        # Ensure not both are specified
         if workspace and group:
             raise serializers.ValidationError(
                 {"error": "Channel cannot belong to both workspace and group"}
             )
 
-        # Validate channel name uniqueness within the parent context
         name = data.get("name")
         if name:
             if workspace:

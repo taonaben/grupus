@@ -4,12 +4,12 @@ import channel.views as views
 urlpatterns = [
     path("create/", views.CreateChannelView.as_view(), name="create_channel"),
     path(
-        "list/<uuid:group>/",
+        "list/<uuid:group_id>/",
         views.ChannelList.as_view(),
         name="list_group_channels",
     ),
     path(
-        "list/<uuid:workspace>/",
+        "list/<uuid:workspace_id>/",
         views.ChannelList.as_view(),
         name="list_workspace_channels",
     ),

@@ -89,15 +89,14 @@ class ChannelList(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        # Get optional filters from query params
-        workspace_id = self.request.query_params.get("workspace")
-        group_id = self.request.query_params.get("group")
+        workspace_id = self.request.query_params.get("workspace_id")
+        group_id = self.request.query_params.get("group_id")
 
-        # Start with all channels where user is a member
         queryset = Channel.objects.all()
 
         # Filter by workspace if specified
         if workspace_id:
+            print("found workspace id in params")
             queryset = queryset.filter(
                 workspace_id=workspace_id,
                 workspace__members__user=self.request.user,
@@ -106,6 +105,8 @@ class ChannelList(generics.ListAPIView):
 
         # Filter by group if specified
         if group_id:
+            print("found group id in params")
+
             queryset = queryset.filter(
                 group_id=group_id,
                 group__members__user=self.request.user,
@@ -117,3 +118,13 @@ class ChannelList(generics.ListAPIView):
             .distinct()
             .order_by("-created_at")
         )
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
