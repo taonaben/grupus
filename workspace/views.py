@@ -24,24 +24,20 @@ class CreateWorkspaceView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        # Create the workspace with the current user as creator
         workspace = serializer.save(created_by=request.user)
 
-        # Create the space membership for the creator as admin
         SpaceMember.objects.create(
             user=request.user,
             workspace=workspace,
             role=SpaceMember.Role.ADMIN,  # Using the enum from model
         )
 
-        # create default channel
         Channel.objects.create(
             name="general",
             workspace=workspace,
             created_by=request.user,
         )
 
-        # Update the member count
         workspace.member_count = 1
         workspace.save(update_fields=["member_count"])
 
@@ -56,16 +52,15 @@ class WorkspaceList(generics.ListAPIView):
     # pagination_class = CustomCursorPagination
 
     def get_queryset(self):
-        # Get all workspaces where the user is a member through SpaceMember
         return (
             Workspace.objects.filter(
                 members__user=self.request.user,
-                members__is_banned=False,  # Exclude if user is banned
+                members__is_banned=False,  
             )
-            .select_related("created_by")  # Optimize by pre-fetching related user
-            .prefetch_related("members")  # Optimize by pre-fetching members
-            .distinct()  # Avoid duplicates
-            .order_by("-created_at")  # Most recent first
+            .select_related("created_by")
+            .prefetch_related("members")
+            .distinct()
+            .order_by("-created_at")
         )
 
     def list(self, request, *args, **kwargs):
@@ -79,21 +74,21 @@ class WorkspaceList(generics.ListAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class WorkspaceDetailView(generics.RetrieveUpdateDestroyAPIView):
+class WorkspaceDetailView(generics.RetrieveUpdateAPIView):
     queryset = Workspace.objects.all()
     permission_classes = [IsAuthenticated]
     serializer_class = WorkspaceSerializer
     lookup_field = "id"
 
-    def delete(self, request, *args, **kwargs):
-        workspace = self.get_object()
-        # TODO make sure admins of the "groups" can delete
-        if workspace.created_by != request.user and not request.user.is_staff:
-            return Response(
-                {"detail": "You do not have permission to delete this workspace."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-        return self.destroy(request, *args, **kwargs)
+    # def delete(self, request, *args, **kwargs):
+    #     workspace = self.get_object()
+    #     # TODO make sure admins of the "groups" can delete
+    #     if workspace.created_by != request.user:
+    #         return Response(
+    #             {"detail": "You do not have permission to delete this workspace."},
+    #             status=status.HTTP_403_FORBIDDEN,
+    #         )
+    #     return self.destroy(request, *args, **kwargs)
 
     def put(self, request, *args, **kwargs):
         workspace = self.get_object()
@@ -188,3 +183,32 @@ class SpaceMembersList(generics.ListAPIView):
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class WorkspaceMemberLeaveView(generics.DestroyAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = SpaceMemberSerializer
+    lookup_field = "workspace_id"
+
+    def delete(self, request, *args, **kwargs):
+        workspace_id = self.kwargs.get("workspace_id")
+        try:
+            space_member = SpaceMember.objects.get(
+                workspace__id=workspace_id, user=request.user
+            )
+        except SpaceMember.DoesNotExist:
+            return Response(
+                {"detail": "You are not a member of this workspace."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        workspace = space_member.workspace
+        space_member.delete()
+
+        if workspace.member_count > 0:
+            workspace.member_count -= 1
+            workspace.save(update_fields=["member_count"])
+    
+        return Response(
+            {"detail": "You have left the workspace."}, status=status.HTTP_200_OK
+        )

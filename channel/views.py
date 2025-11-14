@@ -1,3 +1,4 @@
+import logging
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -5,6 +6,8 @@ from workspace.models import Workspace, SpaceMember
 from group.models import Group, GroupMember
 from .models import Channel
 from .serializers import ChannelSerializer
+
+logger = logging.getLogger(__name__)
 
 
 class CreateChannelView(generics.CreateAPIView):
@@ -87,16 +90,20 @@ class CreateChannelView(generics.CreateAPIView):
 class ChannelList(generics.ListAPIView):
     serializer_class = ChannelSerializer
     permission_classes = [IsAuthenticated]
+    # lookup_url_kwarg = ["workspace_id", "group_id"]
 
     def get_queryset(self):
         workspace_id = self.request.query_params.get("workspace_id")
         group_id = self.request.query_params.get("group_id")
 
+        logger.info(f"workspace_id: {workspace_id}")
+        logger.info(f"group_id: {group_id}")
+
         queryset = Channel.objects.all()
 
         # Filter by workspace if specified
         if workspace_id:
-            print("found workspace id in params")
+            logger.info("found workspace id in params")
             queryset = queryset.filter(
                 workspace_id=workspace_id,
                 workspace__members__user=self.request.user,
@@ -105,7 +112,7 @@ class ChannelList(generics.ListAPIView):
 
         # Filter by group if specified
         if group_id:
-            print("found group id in params")
+            logger.info("found group id in params")
 
             queryset = queryset.filter(
                 group_id=group_id,

@@ -98,22 +98,22 @@ class GroupList(generics.ListAPIView):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class GroupDetailView(generics.RetrieveUpdateDestroyAPIView):
+class GroupDetailView(generics.RetrieveUpdateAPIView):
     queryset = Group.objects.all()
     permission_classes = [IsAuthenticated]
     serializer_class = GroupSerializer
     lookup_field = "id"
 
-    def delete(self, request, *args, **kwargs):
-        group = self.get_object()
+    # def delete(self, request, *args, **kwargs):
+    #     group = self.get_object()
 
-        if group.created_by != request.user and not request.user.is_staff:
-            return Response(
-                {"detail": "You do not have permission to delete this group."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
+    #     if group.created_by != request.user and not request.user.is_staff:
+    #         return Response(
+    #             {"detail": "You do not have permission to delete this group."},
+    #             status=status.HTTP_403_FORBIDDEN,
+    #         )
 
-        return self.destroy(request, *args, **kwargs)
+    #     return self.destroy(request, *args, **kwargs)
 
     def put(self, request, *args, **kwargs):
         group = self.get_object()
@@ -203,3 +203,32 @@ class GroupMemberList(generics.ListAPIView):
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class GroupMemberLeaveView(generics.DestroyAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = GroupMemberSerializer
+    lookup_field = "group_id"
+
+    def delete(self, request, *args, **kwargs):
+        group_id = self.kwargs.get("group_id")
+        try:
+            group_member = GroupMember.objects.get(
+                group__id=group_id,
+                user=request.user,
+            )
+        except GroupMember.DoesNotExist:
+            return Response(
+                {"detail": "You are not a member of this group."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        group = group_member.group
+        group_member.delete()
+
+        # Decrement member count
+        group.member_count = max(0, group.member_count - 1)
+        group.save(update_fields=["member_count"])
+
+        return Response(
+            {"detail": "You have left the group."}, status=status.HTTP_200_OK
+        )

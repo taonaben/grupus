@@ -49,7 +49,6 @@ INSTALLED_APPS = [
     "drf_yasg",
     "channels",
     "channels_redis",
-
     # "rest_framework_simplejwt.token_blacklist",
     # "silk",
     "drf_spectacular",
@@ -61,7 +60,6 @@ INSTALLED_APPS = [
     "chat",
     "channel",
     "group",
-    
     "task",
     "user",
     "workspace",
@@ -248,5 +246,43 @@ CACHES = {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "TIMEOUT": 60 * 60 * 24,  # Cache timeout in seconds (1 day)
         },
+    },
+}
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {process:d} {thread:d} {message}",
+            "style": "{",
+        },
+        "simple": {
+            "format": "{asctime}:{levelname} {module}.py (line {lineno:d}). {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "level": os.getenv("DJANGO_LOG_LEVEL"),
+            "formatter": "simple",
+        },
+        "file": {
+            "class": "logging.FileHandler",
+            "filename": os.getenv("DJANGO_LOG_FILE"),
+            "formatter": "verbose",
+            "level": os.getenv("DJANGO_LOG_LEVEL"),
+        },
+    },
+    "loggers": {
+        "": {
+            "level": os.getenv("DJANGO_LOG_LEVEL"),
+            "handlers": ["file", "console"],
+        }
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
     },
 }
