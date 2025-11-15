@@ -55,7 +55,7 @@ class WorkspaceList(generics.ListAPIView):
         return (
             Workspace.objects.filter(
                 members__user=self.request.user,
-                members__is_banned=False,  
+                members__is_banned=False,
             )
             .select_related("created_by")
             .prefetch_related("members")
@@ -160,7 +160,6 @@ class CreateSpaceMemberView(generics.CreateAPIView):
 class SpaceMembersList(generics.ListAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = SpaceMemberSerializer
-    
 
     def get_queryset(self):
         workspace_id = self.kwargs.get("workspace_id")
@@ -208,7 +207,7 @@ class WorkspaceMemberLeaveView(generics.DestroyAPIView):
         if workspace.member_count > 0:
             workspace.member_count -= 1
             workspace.save(update_fields=["member_count"])
-    
+
         return Response(
             {"detail": "You have left the workspace."}, status=status.HTTP_200_OK
         )

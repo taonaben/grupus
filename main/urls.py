@@ -29,12 +29,14 @@ from drf_spectacular.views import (
 from workspace.urls import urlpatterns as workspace_urls
 from group.urls import urlpatterns as group_urls
 from channel.urls import urlpatterns as channel_urls
+from task.urls import urlpatterns as task_urls
 
 
 app_urlpatterns = [
     path("workspace/", include(workspace_urls)),
     path("group/", include(group_urls)),
     path("channel/", include(channel_urls)),
+    path("task/", include(task_urls)),
 
 ]
 
