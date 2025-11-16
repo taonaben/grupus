@@ -16,7 +16,7 @@ urlpatterns = [
     path("list/", views.GroupList.as_view(), name="list-groups"),
     path("<uuid:id>/", views.GroupDetailView.as_view(), name="group-detail"),
     path(
-        "member/create/<str:access_code>/",
+        "member/add/<str:access_code>/",
         views.CreateGroupMemberView.as_view(),
         name="create-group-member",
     ),

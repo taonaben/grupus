@@ -173,7 +173,7 @@ class CreateGroupMemberView(generics.CreateAPIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if group.member_count >= group.member_limit:
+        if group.member_count >= group.max_members:
             return Response(
                 {"detail": "This group has reached its member limit."},
                 status=status.HTTP_400_BAD_REQUEST,

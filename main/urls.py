@@ -30,6 +30,7 @@ from workspace.urls import urlpatterns as workspace_urls
 from group.urls import urlpatterns as group_urls
 from channel.urls import urlpatterns as channel_urls
 from task.urls import urlpatterns as task_urls
+from user.urls import urlpatterns as user_urls
 
 
 app_urlpatterns = [
@@ -37,15 +38,13 @@ app_urlpatterns = [
     path("group/", include(group_urls)),
     path("channel/", include(channel_urls)),
     path("task/", include(task_urls)),
-
+    path("users/", include(user_urls)),
 ]
 
 third_party_urlpatterns = [
-
     ## JWT Auth
     path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
-
     ## Schema and Documentation
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     # optional ui:

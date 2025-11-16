@@ -34,7 +34,7 @@ class User(AbstractUser):
     # system and preference settings
     is_premium_member = models.BooleanField(default=False)
     preferred_language = models.CharField(max_length=10, default="en")
-    notification_settings = models.JSONField(default=dict, blank=True)
+    notification_settings = models.JSONField(default=dict,null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
 

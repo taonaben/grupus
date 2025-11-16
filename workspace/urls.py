@@ -13,7 +13,7 @@ urlpatterns = [
     path("<uuid:id>/", views.WorkspaceDetailView.as_view(), name="workspace-detail"),
     # S P A C E  M E M B E R  R O U T E S
     path(
-        "members/create/<str:access_code>/",
+        "members/add/<str:access_code>/",
         views.CreateSpaceMemberView.as_view(),
         name="create-space-member",
     ),
