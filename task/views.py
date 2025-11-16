@@ -71,7 +71,6 @@ class TaskBoardList(generics.ListAPIView):
 
 #! T A S K L I S T   V I E W S
 
-
 class CreateTaskListView(generics.CreateAPIView):
     queryset = TaskList.objects.all()
     serializer_class = TaskListSerializer
@@ -80,8 +79,10 @@ class CreateTaskListView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        
+        board_id = request.data.get("board_id")
 
-        task_list = serializer.save()
+        task_list = serializer.save(task_board_id=board_id)
 
         return Response(
             self.get_serializer(task_list).data, status=status.HTTP_201_CREATED

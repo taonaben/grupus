@@ -43,8 +43,9 @@ class TaskList(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+#TODO: optimize position assignment
     def save(self, *args, **kwargs):
-        if not self.position:
+        if not self.position and self.task_board:
             last_position = TaskList.objects.filter(
                 task_board=self.task_board
             ).aggregate(models.Max("position"))["position__max"]
@@ -64,10 +65,18 @@ class TaskAssignment(models.Model):
         "Task", on_delete=models.CASCADE, related_name="assignments"
     )
     assigned_to = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="tasks_assigned_to_me", null=True, blank=True
+        User,
+        on_delete=models.CASCADE,
+        related_name="tasks_assigned_to_me",
+        null=True,
+        blank=True,
     )
     assigned_by = models.ForeignKey(
-        User, on_delete=models.SET_NULL,null=True, blank=True, related_name="tasks_assigned_by_me"
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="tasks_assigned_by_me",
     )
     assigned_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(

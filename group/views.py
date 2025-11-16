@@ -178,7 +178,7 @@ class CreateGroupMemberView(generics.CreateAPIView):
                 {"detail": "This group has reached its member limit."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
+ 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 

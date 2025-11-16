@@ -16,8 +16,8 @@ class CreateChannelView(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
         # Get workspace_id or group_id from request data
-        workspace_id = request.data.get("workspace")
-        group_id = request.data.get("group")
+        workspace_id = request.data.get("workspace_id")
+        group_id = request.data.get("group_id")
 
         # Validate that exactly one parent is specified
         if not workspace_id and not group_id:
