@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework import generics
 from .models import Workspace, SpaceMember
 from channel.models import Channel
+from task.models import TaskBoard, TaskList
 from .serializers import WorkspaceSerializer, SpaceMemberSerializer
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.pagination import PageNumberPagination, CursorPagination
@@ -37,6 +38,19 @@ class CreateWorkspaceView(generics.CreateAPIView):
             workspace=workspace,
             created_by=request.user,
         )
+
+        task_board = TaskBoard.objects.create(
+            workspace=workspace,
+            created_by=request.user,
+        )
+
+        DEFAULT_LISTS = ["To Do", "In Progress", "Done"]
+
+        for list_name in DEFAULT_LISTS:
+            TaskList.objects.create(
+                name=list_name,
+                task_board=task_board,
+            )
 
         workspace.member_count = 1
         workspace.save(update_fields=["member_count"])

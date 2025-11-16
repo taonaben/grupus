@@ -21,7 +21,7 @@ class TaskBoard(models.Model):
         null=True,
         blank=True,
     )
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, default="Main Board")
     description = models.TextField(blank=True, null=True)
     created_by = models.ForeignKey(
         User, on_delete=models.DO_NOTHING, related_name="created_task_boards"
@@ -34,7 +34,7 @@ class TaskBoard(models.Model):
 
 
 class TaskList(models.Model):
-    id = models.UUIDField(primary_key=True, default=models.UUIDField, editable=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     task_board = models.ForeignKey(
         TaskBoard, on_delete=models.CASCADE, related_name="task_lists"
     )
@@ -64,10 +64,10 @@ class TaskAssignment(models.Model):
         "Task", on_delete=models.CASCADE, related_name="assignments"
     )
     assigned_to = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="tasks_assigned_to_me"
+        User, on_delete=models.CASCADE, related_name="tasks_assigned_to_me", null=True, blank=True
     )
     assigned_by = models.ForeignKey(
-        User, on_delete=models.SET_NULL, null=True, related_name="tasks_assigned_by_me"
+        User, on_delete=models.SET_NULL,null=True, blank=True, related_name="tasks_assigned_by_me"
     )
     assigned_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(
@@ -92,7 +92,7 @@ class TaskAssignment(models.Model):
 class Task(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     task_list = models.ForeignKey(
-        TaskList, on_delete=models.CASCADE, related_name="tasks"
+        TaskList, on_delete=models.CASCADE, related_name="tasks", null=True, blank=True
     )
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)

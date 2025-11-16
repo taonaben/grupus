@@ -5,6 +5,7 @@ from rest_framework import generics
 from .models import Group, GroupMember
 from workspace.models import Workspace
 from channel.models import Channel
+from task.models import TaskBoard, TaskList
 from .serializers import GroupSerializer, GroupMemberSerializer
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 
@@ -54,6 +55,19 @@ class CreateGroupView(generics.CreateAPIView):
             group=group,
             created_by=request.user,
         )
+
+        task_board = TaskBoard.objects.create(
+            group=group,
+            created_by=request.user,
+        )
+
+        DEFAULT_LISTS = ["To Do", "In Progress", "Done"]
+
+        for list_name in DEFAULT_LISTS:
+            TaskList.objects.create(
+                name=list_name,
+                task_board=task_board,
+            )
 
         # Update member count
         group.member_count = 1
@@ -203,6 +217,7 @@ class GroupMemberList(generics.ListAPIView):
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 class GroupMemberLeaveView(generics.DestroyAPIView):
     permission_classes = [IsAuthenticated]
