@@ -3,6 +3,9 @@ from user.models import User
 from workspace.models import Workspace
 from group.models import Group
 import uuid
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class TaskBoard(models.Model):
@@ -34,6 +37,7 @@ class TaskBoard(models.Model):
 
 
 class TaskList(models.Model):
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     task_board = models.ForeignKey(
         TaskBoard, on_delete=models.CASCADE, related_name="task_lists"
@@ -43,14 +47,19 @@ class TaskList(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-#TODO: optimize position assignment
+    # TODO: optimize position assignment
     def save(self, *args, **kwargs):
-        if not self.position and self.task_board:
-            last_position = TaskList.objects.filter(
-                task_board=self.task_board
-            ).aggregate(models.Max("position"))["position__max"]
-            self.position = (last_position + 1) if last_position is not None else 1
+        if self._state.adding and not self.position:
+            if self.task_board_id:
+                last_position = (
+                    TaskList.objects.filter(task_board_id=self.task_board_id)
+                    .aggregate(max_pos=models.Max("position"))
+                    .get("max_pos")
+                )
+                logger.info(f"last position: {last_position}")
+                self.position = (last_position + 1) if last_position is not None else 1
 
+        print("SAVE RAN", self.position)
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -119,10 +128,10 @@ class Task(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
-        if not self.position:
-            last_position = Task.objects.filter(task_list=self.task_list).aggregate(
-                models.Max("position")
-            )["position__max"]
+        if self.pk is None and self.task_list_id:
+            last_position = Task.objects.filter(
+                task_list_id=self.task_list_id
+            ).aggregate(models.Max("position"))["position__max"]
             self.position = (last_position + 1) if last_position is not None else 1
 
         super().save(*args, **kwargs)

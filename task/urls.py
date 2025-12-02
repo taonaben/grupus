@@ -4,6 +4,7 @@ from .views import (
     TaskBoardList,
     CreateTaskListView,
     TaskListList,
+    ChangeTaskListPosition,
     CreateTaskView,
     TaskCardList,
     GetTaskBoardMembersView,
@@ -23,6 +24,11 @@ urlpatterns = [
         "create-task_list/", view=CreateTaskListView.as_view(), name="create_task_list"
     ),
     path("list-task_list/", view=TaskListList.as_view(), name="list_task_lists"),
+    path(
+        "<uuid:task_board_id>/reorder-list/",
+        view=ChangeTaskListPosition.as_view(),
+        name="change_task_list_position",
+    ),
     #! T A S K   U R L S
     path("create-task/", view=CreateTaskView.as_view(), name="create_task"),
     path("list-task_card/", view=TaskCardList.as_view(), name="list_tasks"),

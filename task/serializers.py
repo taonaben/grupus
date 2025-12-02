@@ -28,13 +28,14 @@ class TaskListSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "task_board",
-            "name",
+            "name", 
             "position",
             "created_at",
             "updated_at",
         ]
+     
 
-        read_only_fields = ["id", "created_at", "updated_at", "task_board"]
+        read_only_fields = ["id", "created_at", "updated_at", "task_board", "position"]
 
 
 class TaskSerializer(serializers.ModelSerializer):
