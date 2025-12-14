@@ -1,5 +1,6 @@
 from django.shortcuts import render
 import logging
+import uuid
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import generics
@@ -276,7 +277,11 @@ class CreateTaskView(generics.CreateAPIView):
         if assigned_to_ids:
             for user_id in assigned_to_ids:
                 try:
-                    user = User.objects.get(id=user_id)
+                    user = (
+                        User.objects.get(id=user_id)
+                        if isinstance(user_id, uuid.UUID)
+                        else logger.warning(f"Invalid user id")
+                    )
                     TaskAssignment.objects.create(
                         task=task,
                         assigned_to=user,
