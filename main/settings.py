@@ -43,7 +43,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    # Third-party apps
+    #! Third-party apps
     "corsheaders",
     "rest_framework",
     "drf_yasg",
@@ -56,13 +56,15 @@ INSTALLED_APPS = [
     # "django_celery_beat",
     # "corsheaders",
     # "django_extensions",
-    # Local apps
+    #! Local apps
     "chat",
     "channel",
     "group",
     "task",
     "user",
     "workspace",
+    "authentication",
+    "badges",
 ]
 
 MIDDLEWARE = [
