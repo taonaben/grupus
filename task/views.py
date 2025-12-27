@@ -12,6 +12,8 @@ from group.models import Group, GroupMember
 from user.models import User
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.pagination import PageNumberPagination, CursorPagination
+from drf_spectacular.utils import extend_schema
+
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +35,12 @@ class CreateTaskBoardView(generics.CreateAPIView):
         )
 
 
+@extend_schema(summary="List Boards in space or group")
 class TaskBoardList(generics.ListAPIView):
+    """
+    List of all the boards in a workspace or group
+    """
+
     queryset = TaskBoard.objects.all()
     serializer_class = TaskBoardSerializer
     permission_classes = [IsAuthenticated]
@@ -74,6 +81,14 @@ class TaskBoardList(generics.ListAPIView):
 #! T A S K L I S T   V I E W S
 
 
+@extend_schema(
+    summary="Create a task list",
+    description="""Creates a new task list inside a group workspace. 
+    The authenticated user becomes the creator.
+    This list will contain tasks that are either pending, done or binned, depending""",
+    request=TaskListSerializer,
+    responses={201: TaskSerializer},
+)
 class CreateTaskListView(generics.CreateAPIView):
     queryset = TaskList.objects.all()
     serializer_class = TaskListSerializer
