@@ -31,9 +31,11 @@ from group.urls import urlpatterns as group_urls
 from channel.urls import urlpatterns as channel_urls
 from task.urls import urlpatterns as task_urls
 from user.urls import urlpatterns as user_urls
+from authentication.urls import urlpatterns as auth_urls
 
 
 app_urlpatterns = [
+    path("auth/", include(auth_urls)),
     path("workspace/", include(workspace_urls)),
     path("group/", include(group_urls)),
     path("channel/", include(channel_urls)),
