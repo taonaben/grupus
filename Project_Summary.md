@@ -185,7 +185,6 @@ Built for real people — not enterprise demos.
 Options:
 
 * **Django Channels**
-* or **Node.js + Socket.io** (microservice)
 
 Communication via:
 
