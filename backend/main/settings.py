@@ -29,9 +29,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("SECRET_KEY", "your-default-secret-key")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "True") == "True"
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
 
 # Application definition
@@ -122,14 +122,14 @@ else:
     try:
         import dj_database_url
 
-        render_external_db_url = os.environ.get("RENDER_DB_URL") or os.environ.get(
+        external_db_url = os.environ.get("EXTERNAL_DB_URL") or os.environ.get(
             "DATABASE_URL"
         )
-        logger.info(f"Render external db url: {render_external_db_url!r}")
+        logger.info(f"external db url: {external_db_url!r}")
 
         # Initialize DATABASES and only parse when a URL is provided
-        if render_external_db_url:
-            DATABASES = {"default": dj_database_url.parse(render_external_db_url)}
+        if external_db_url:
+            DATABASES = {"default": dj_database_url.parse(external_db_url)}
         else:
             # Fallback to a local sqlite DB so build-time commands (collectstatic) don't fail
             DATABASES = {
@@ -259,7 +259,7 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
     "accept",
 ]
 CORS_ALLOW_METHODS = list(default_methods) + ["POST", "OPTIONS"]
-CORS_ALLOW_ALL_ORIGINS = True  # Or use CORS_ALLOWED_ORIGINS with exact domains
+CORS_ALLOW_ALL_ORIGINS = os.getenv("CORS_ALLOW_ALL_ORIGINS", "False") == "True"
 CORS_ALLOW_CREDENTIALS = True
 
 
@@ -297,20 +297,14 @@ LOGGING = {
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
-            "level": os.getenv("DJANGO_LOG_LEVEL"),
+            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
             "formatter": "simple",
-        },
-        "file": {
-            "class": "logging.FileHandler",
-            "filename": os.getenv("DJANGO_LOG_FILE"),
-            "formatter": "verbose",
-            "level": os.getenv("DJANGO_LOG_LEVEL"),
         },
     },
     "loggers": {
         "": {
-            "level": os.getenv("DJANGO_LOG_LEVEL"),
-            "handlers": ["file", "console"],
+            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+            "handlers": ["console"],
         }
     },
     "root": {
