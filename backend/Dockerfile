@@ -14,9 +14,15 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 
 COPY . .
 
+RUN sed -i 's/\r$//' entrypoint.sh
+
 RUN chmod +x entrypoint.sh
 
 ENTRYPOINT ["./entrypoint.sh"]
 
 # Add this to see import errors:
 RUN python -c "import django; django.setup()" || echo "Django setup failed - check imports"
+
+# Use Daphne ASGI server for WebSocket support
+# Can be overridden by entrypoint.sh or environment
+CMD ["daphne", "-b", "0.0.0.0", "-p", "8000", "main.asgi:application"]

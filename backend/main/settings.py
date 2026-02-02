@@ -97,7 +97,20 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "main.wsgi.application"
+ASGI_APPLICATION = "main.asgi.application"
 
+# Channels Configuration
+# https://channels.readthedocs.io/en/latest/topics/channel_layers.html
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [os.environ.get("REDIS_URL", "redis://localhost:6379/0")],
+            "capacity": 1500,  # Default 1500
+            "expiry": 10,  # Default 10
+        },
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
