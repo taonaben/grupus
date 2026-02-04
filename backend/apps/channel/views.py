@@ -38,12 +38,16 @@ class ChannelViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         workspace_id = request.data.get("workspace_id")
+        is_user_admin =  SpaceMember.objects.filter(
+            workspace_id=workspace_id, user=request.user, role=SpaceMember.Role.ADMIN).exists()
 
         if not workspace_id:
             return Response(
                 {"detail": "Workspace must be specified"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+            
+        
 
         # Check permissions and parent existence
         if workspace_id:
@@ -51,7 +55,7 @@ class ChannelViewSet(viewsets.ModelViewSet):
                 workspace = Workspace.objects.get(id=workspace_id)
                 # Verify user is a member of the workspace
                 if not SpaceMember.objects.filter(
-                    workspace=workspace, user=request.user, is_banned=False
+                    workspace=workspace, user=request.user, is_banned=False, 
                 ).exists():
                     return Response(
                         {
@@ -64,7 +68,12 @@ class ChannelViewSet(viewsets.ModelViewSet):
                     {"detail": "Workspace not found"}, status=status.HTTP_404_NOT_FOUND
                 )
 
-        # Create the channel
+        if not is_user_admin:
+            return Response(
+                {"detail": "Only workspace admins can create channels"},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+            
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         channel = serializer.save(created_by=request.user)
