@@ -7,7 +7,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("channel", "0001_initial"),
         ("chat", "0001_initial"),

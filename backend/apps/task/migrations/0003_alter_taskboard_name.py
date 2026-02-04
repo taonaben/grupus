@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("task", "0002_remove_task_category_task_position_and_more"),
     ]

@@ -37,6 +37,7 @@ class GroupSerializer(serializers.ModelSerializer):
 
 # Serializer for GroupMember model
 
+
 class GroupMemberSerializer(serializers.ModelSerializer):
     class Meta:
         model = GroupMember

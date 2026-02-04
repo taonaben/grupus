@@ -5,7 +5,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("group", "0002_remove_group_invite_code_group_access_code_and_more"),
         ("workspace", "0003_alter_spacemember_custom_permissions"),

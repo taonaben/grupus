@@ -1,14 +1,18 @@
 from django.urls import path
-from .views import (
+
+from .views.task_board_views import (
     CreateTaskBoardView,
     TaskBoardList,
+    GetTaskBoardMembersView,
+)
+from .views.task_list_views import (
     CreateTaskListView,
     TaskListList,
     ChangeTaskListPosition,
-    CreateTaskView,
-    TaskCardList,
-    GetTaskBoardMembersView,
 )
+
+from .views.task_card_views import CreateTaskView, TaskCardList
+
 
 urlpatterns = [
     #! T A S K   B O A R D   U R L S
@@ -30,6 +34,10 @@ urlpatterns = [
         name="change_task_list_position",
     ),
     #! T A S K   U R L S
-    path("create-task/", view=CreateTaskView.as_view(), name="create_task", ),
+    path(
+        "create-task/",
+        view=CreateTaskView.as_view(),
+        name="create_task",
+    ),
     path("list-task_card/", view=TaskCardList.as_view(), name="list_tasks"),
 ]

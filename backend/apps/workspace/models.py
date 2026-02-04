@@ -6,11 +6,9 @@ import random
 import time
 
 
-
 class Workspace(models.Model):
-
     def generate_access_code():
-        MAX_ATTEMPTS = 10  
+        MAX_ATTEMPTS = 10
         chars = string.ascii_uppercase + string.digits
 
         for attempt in range(MAX_ATTEMPTS):

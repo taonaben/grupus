@@ -1,4 +1,4 @@
-from rest_framework import status
+from rest_framework import status, generics
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.parsers import JSONParser
@@ -8,13 +8,13 @@ from .serializers import LoginSerializer, LogoutSerializer
 from rest_framework.views import APIView
 
 
-class LoginView(APIView):
+class LoginView(generics.GenericAPIView):
     """Handle user login and return JWT tokens"""
 
     permission_classes = [AllowAny]
     parser_classes = [JSONParser]
 
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
         serializer = LoginSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -41,8 +41,17 @@ class LoginView(APIView):
         )
 
 
-class LogoutView(APIView):
-    """Handle user logout"""
+class LogoutView(generics.GenericAPIView):
+    """
+    Handle user logout by blacklisting JWT refresh tokens.
+
+    Requires authentication to access this endpoint.
+
+    Request body:\n
+        - refresh: JWT refresh token to blacklist (required)\n
+    Response:\n
+        - detail: Success or error message
+    """
 
     permission_classes = [IsAuthenticated]
     parser_classes = [JSONParser]

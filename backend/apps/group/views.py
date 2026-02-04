@@ -38,7 +38,7 @@ class CreateGroupView(generics.CreateAPIView):
                     {"detail": "Workspace not found"}, status=status.HTTP_404_NOT_FOUND
                 )
         else:
-            workspace = None
+            workspace = None 
 
         # Create the group
         group = serializer.save(created_by=request.user, workspace=workspace)
@@ -47,21 +47,6 @@ class CreateGroupView(generics.CreateAPIView):
         GroupMember.objects.create(
             user=request.user, group=group, role=GroupMember.Role.ADMIN
         )
-
-   
-
-        task_board = TaskBoard.objects.create(
-            group=group,
-            created_by=request.user,
-        )
-
-        DEFAULT_LISTS = ["To Do", "In Progress", "Done"]
-
-        for list_name in DEFAULT_LISTS:
-            TaskList.objects.create(
-                name=list_name,
-                task_board=task_board,
-            )
 
         # Update member count
         group.member_count = 1
@@ -76,6 +61,10 @@ class GroupList(generics.ListAPIView):
     # pagination_class = CustomCursorPagination
 
     def get_queryset(self):
+        # Return empty queryset for schema generation
+        if getattr(self, "swagger_fake_view", False):
+            return Group.objects.none()
+
         workspace_id = self.request.query_params.get("workspace_id")
         queryset = Group.objects.filter(
             members__user=self.request.user,
@@ -172,7 +161,7 @@ class CreateGroupMemberView(generics.CreateAPIView):
                 {"detail": "This group has reached its member limit."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
- 
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
