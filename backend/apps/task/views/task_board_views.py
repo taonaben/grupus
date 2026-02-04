@@ -7,8 +7,8 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.views import APIView
 
-from backend.apps.group.models import GroupMember
-from backend.apps.workspace.models import SpaceMember
+from apps.group.models import GroupMember
+from apps.workspace.models import SpaceMember
 from ..models import TaskBoard
 from ..serializers import TaskBoardSerializer
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
