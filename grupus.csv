@@ -1,0 +1,99 @@
+Issue Type,Summary,Description,Epic Name,Labels
+Epic,Critical Fixes & Chat API,Stabilize core auth and implement message REST APIs,,
+Story,Fix logout endpoint,Resolve logout URL bug and token blacklist logic,Critical Fixes & Chat API,auth
+Task,Fix logout URL bug,Correct logout route definition in views.py,Critical Fixes & Chat API,auth
+Task,Fix token blacklist logic,Ensure refresh tokens are properly invalidated,Critical Fixes & Chat API,auth
+Task,Add logout tests,Add unit tests for logout behavior,Critical Fixes & Chat API,tests
+Story,Implement Message REST endpoints,Enable sending and fetching messages via API,Critical Fixes & Chat API,chat
+Task,Create Message views,POST GET DELETE endpoints for messages,Critical Fixes & Chat API,chat
+Task,Create chat urls,Add chat/urls.py and wire routes,Critical Fixes & Chat API,chat
+Task,Add permission checks,Ensure only members can access messages,Critical Fixes & Chat API,security
+Story,Message serialization & validation,Ensure message data integrity,Critical Fixes & Chat API,serializers
+Task,Create Message serializers,chat/serializers.py with validation,Critical Fixes & Chat API,serializers
+Task,Validate empty messages,Prevent blank or invalid messages,Critical Fixes & Chat API,serializers
+Story,Fix serializer warnings,Resolve DRF warnings,Critical Fixes & Chat API,cleanup
+Task,Fix GetTaskBoardMembersView serializer warning,Correct serializer usage,Critical Fixes & Chat API,cleanup
+Task,Fix ChangeTaskListPosition serializer warning,Correct serializer usage,Critical Fixes & Chat API,cleanup
+Story,Standardize API error handling,Improve error clarity,Critical Fixes & Chat API,api
+Task,Invalid access code errors,Return consistent error responses,Critical Fixes & Chat API,api
+Task,Permission denial errors,Standardize permission denied responses,Critical Fixes & Chat API,api
+
+Epic,Real-Time Messaging (WebSockets),Enable real-time chat using Django Channels,,
+Story,WebSocket consumer setup,Create core WebSocket consumers,Real-Time Messaging (WebSockets),channels
+Task,Create chat consumers,Implement connect receive disconnect,Real-Time Messaging (WebSockets),channels
+Story,WebSocket routing,Map WebSocket URLs,Real-Time Messaging (WebSockets),channels
+Task,Create chat routing,Define websocket URL routes,Real-Time Messaging (WebSockets),channels
+Task,Integrate routing in ASGI,Wire Channels into asgi.py,Real-Time Messaging (WebSockets),channels
+Story,Message broadcasting,Broadcast messages in real time,Real-Time Messaging (WebSockets),realtime
+Task,Broadcast messages to group subscribers,Send messages to all connected clients,Real-Time Messaging (WebSockets),realtime
+Task,Enforce WebSocket permissions,Ensure auth and group membership,Real-Time Messaging (WebSockets),security
+Story,Typing indicators (optional),Improve UX,Real-Time Messaging (WebSockets),ux
+Task,Implement typing events,Broadcast typing status,Real-Time Messaging (WebSockets),ux
+
+Epic,Badges & Achievements System,Reward user actions with badges,,
+Story,Define badge rules,Create achievement criteria,Badges & Achievements System,badges
+Task,Define badge rules,First task completed, message milestones,Badges & Achievements System,badges
+Task,Implement synchronous badge logic,Award badges during request cycle,Badges & Achievements System,badges
+Story,Badge API endpoints,Expose badge data,Badges & Achievements System,api
+Task,GET badges list,List all available badges,Badges & Achievements System,api
+Task,POST award badge,Award badge to user,Badges & Achievements System,api
+Task,GET user badges,Retrieve user-earned badges,Badges & Achievements System,api
+Story,Badge serialization,Serialize badge data,Badges & Achievements System,serializers
+Task,Create badge serializers,Implement badges/serializers.py,Badges & Achievements System,serializers
+Task,Prevent duplicate awards,Ensure badge uniqueness,Badges & Achievements System,logic
+Story,Async badge processing (optional),Offload badge logic,Badges & Achievements System,celery
+Task,Configure Celery and Redis,Enable background processing,Badges & Achievements System,celery
+Task,Move badge checks to Celery,Async awarding,Badges & Achievements System,celery
+Story,Badge notifications,Notify users of achievements,Badges & Achievements System,notifications
+Task,Trigger badge notifications,Send notification on award,Badges & Achievements System,notifications
+
+Epic,Core Feature Completeness,Finish essential collaboration features,,
+Story,Task comments system,Allow discussion on tasks,Core Feature Completeness,comments
+Task,Create TaskComment model,Add model and relations,Core Feature Completeness,comments
+Task,Task comment endpoints,CRUD for task comments,Core Feature Completeness,comments
+Story,Search functionality,Enable message and task search,Core Feature Completeness,search
+Task,Message search,Keyword and date filters,Core Feature Completeness,search
+Task,Task search,Filter by assignee status,Core Feature Completeness,search
+Story,Activity feed,Audit user actions,Core Feature Completeness,activity
+Task,Create ActivityLog model,Log system actions,Core Feature Completeness,activity
+Task,Log key events,Task creation joins etc,Core Feature Completeness,activity
+Story,Workspace approval workflow,Admin approval for workspaces,Core Feature Completeness,workflow
+Task,Implement approval_required logic,Model and logic updates,Core Feature Completeness,workflow
+Task,Approval endpoints,Admin approve reject,Core Feature Completeness,workflow
+Story,File uploads,Support files in tasks and messages,Core Feature Completeness,files
+Task,Add file fields to models,Extend task and message models,Core Feature Completeness,files
+Task,File serializers,Handle uploads via API,Core Feature Completeness,files
+Task,Local storage handling,Store files locally for MVP,Core Feature Completeness,files
+
+Epic,Quality Tests & Optimization,Stability and performance improvements,,
+Story,Comprehensive testing,Increase coverage,Quality Tests & Optimization,tests
+Task,Auth and users tests,Write auth tests,Quality Tests & Optimization,tests
+Task,Groups and workspaces tests,Write group tests,Quality Tests & Optimization,tests
+Task,Tasks and boards tests,Write task tests,Quality Tests & Optimization,tests
+Task,Chat and WebSocket tests,Channels test client tests,Quality Tests & Optimization,tests
+Task,Badge tests,Test badge logic,Quality Tests & Optimization,tests
+Story,Performance optimization,Reduce DB load,Quality Tests & Optimization,performance
+Task,Add select_related and prefetch_related,Fix N+1 queries,Quality Tests & Optimization,performance
+Story,API hardening,Protect endpoints,Quality Tests & Optimization,security
+Task,Add DRF throttling,Rate limit APIs,Quality Tests & Optimization,security
+Task,Add pagination,Paginate all list endpoints,Quality Tests & Optimization,api
+Story,Soft deletes,Preserve data,Quality Tests & Optimization,models
+Task,Add deleted_at field,Soft delete support,Quality Tests & Optimization,models
+Task,Custom QuerySet and Manager,Filter deleted records,Quality Tests & Optimization,models
+
+Epic,Production Hardening & Security,Prepare system for production,,
+Story,Environment configuration,Secure settings,Production Hardening & Security,config
+Task,Disable DEBUG,Turn off debug mode,Production Hardening & Security,config
+Task,Move SECRET_KEY to env vars,Secure secrets,Production Hardening & Security,config
+Task,Configure ALLOWED_HOSTS,Restrict domains,Production Hardening & Security,config
+Story,Email setup,Enable notifications,Production Hardening & Security,email
+Task,Configure SMTP,Email backend setup,Production Hardening & Security,email
+Task,Invitation and notification emails,Send system emails,Production Hardening & Security,email
+Story,Security hardening,Lock down app,Production Hardening & Security,security
+Task,Restrict CORS,Allow only frontend domains,Production Hardening & Security,security
+Task,Enforce HTTPS,Secure traffic,Production Hardening & Security,security
+Task,CSRF and auth header validation,Prevent request abuse,Production Hardening & Security,security
+Story,Final production checks,Pre-launch validation,Production Hardening & Security,release
+Task,Run Django security checks,Audit vulnerabilities,Production Hardening & Security,release
+Task,Validate migrations,Test DB migrations,Production Hardening & Security,release
+Task,Squash migrations,Clean migration history,Production Hardening & Security,release

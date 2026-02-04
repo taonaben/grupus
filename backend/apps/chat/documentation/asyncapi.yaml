@@ -1,0 +1,437 @@
+asyncapi: '3.0.0'
+
+info:
+  title: Grupus Chat WebSocket API
+  version: 1.0.0
+  description: Real-time chat system with support for multiple message types, reactions, typing indicators, and presence notifications
+  contact:
+    name: Grupus Team
+  license:
+    name: MIT
+
+servers:
+  development:
+    host: localhost:8000
+    protocol: ws
+    description: Development WebSocket server
+    variables:
+      basePath:
+        default: /ws/chat/
+
+  production:
+    host: api.grupus.com
+    protocol: wss
+    description: Production WebSocket server (secure)
+    variables:
+      basePath:
+        default: /ws/chat/
+
+defaultContentType: application/json
+
+channels:
+  chatRoom:
+    address: '{basePath}{room_id}/'
+    description: Chat room for real-time messaging
+    parameters:
+      room_id:
+        description: Unique Channel UUID for the chat room
+        schema:
+          type: string
+          format: uuid
+          example: '550e8400-e29b-41d4-a716-446655440000'
+
+    messages:
+      textMessage:
+        name: textMessage
+        title: Text Message
+        summary: Send a regular text message
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/TextMessage'
+        examples:
+          - name: simpleText
+            payload:
+              type: message
+              message_type: text
+              content: Hello everyone!
+              metadata: {}
+
+      reminderMessage:
+        name: reminderMessage
+        title: Reminder Message
+        summary: Send a time-sensitive reminder
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/ReminderMessage'
+        examples:
+          - name: highPriorityReminder
+            payload:
+              type: message
+              message_type: reminder
+              content: Complete project report
+              metadata:
+                due_date: '2026-02-15T10:00:00Z'
+                priority: high
+                tags: ['important', 'deadline']
+
+      alertMessage:
+        name: alertMessage
+        title: Alert Message
+        summary: Send a system alert or notification
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/AlertMessage'
+        examples:
+          - name: maintenanceAlert
+            payload:
+              type: message
+              message_type: alert
+              content: System maintenance in 30 minutes
+              metadata:
+                alert_level: warning
+                action_url: 'https://status.grupus.com'
+
+      notificationMessage:
+        name: notificationMessage
+        title: Notification Message
+        summary: Send a notification to specific user or group
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/NotificationMessage'
+        examples:
+          - name: mentionNotification
+            payload:
+              type: message
+              message_type: notification
+              content: '@john_doe has assigned you a task'
+              metadata:
+                notification_type: mention
+                target_user_id: 'user-uuid-123'
+
+      typingIndicator:
+        name: typingIndicator
+        title: Typing Indicator
+        summary: Broadcast when user starts/stops typing (not persisted)
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/TypingIndicator'
+        examples:
+          - name: userTyping
+            payload:
+              type: typing
+              is_typing: true
+
+      messageReaction:
+        name: messageReaction
+        title: Message Reaction
+        summary: React to a message with an emoji
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/MessageReaction'
+        examples:
+          - name: thumbsUp
+            payload:
+              type: reaction
+              message_id: '550e8400-e29b-41d4-a716-446655440000'
+              emoji: '👍'
+
+      messageBroadcast:
+        name: messageBroadcast
+        title: Message Broadcast
+        summary: Receive broadcasted message from room
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/MessageBroadcast'
+        examples:
+          - name: receivedMessage
+            payload:
+              type: message
+              data:
+                id: '550e8400-e29b-41d4-a716-446655440000'
+                content: Hello!
+                message_type: text
+                sender:
+                  id: 'user-uuid'
+                  username: john_doe
+                channel_id: '550e8400-e29b-41d4-a716-446655440001'
+                created_at: '2026-02-01T12:00:00Z'
+
+      userPresence:
+        name: userPresence
+        title: User Presence
+        summary: Notification when user joins or leaves
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/UserPresence'
+        examples:
+          - name: userJoined
+            payload:
+              type: user_joined
+              user_id: 'user-uuid'
+              username: john_doe
+              timestamp: '2026-02-01T12:00:00Z'
+
+      errorMessage:
+        name: errorMessage
+        title: Error Message
+        summary: Server error response
+        contentType: application/json
+        payload:
+          $ref: '#/components/schemas/ErrorMessage'
+        examples:
+          - name: authError
+            payload:
+              type: error
+              message: Invalid or expired token
+
+components:
+  schemas:
+    TextMessage:
+      type: object
+      title: Text Message
+      required: [type, message_type, content]
+      properties:
+        type:
+          type: string
+          enum: [message]
+          description: Message category
+        message_type:
+          type: string
+          enum: [text]
+          description: Type of message
+        content:
+          type: string
+          minLength: 1
+          maxLength: 5000
+          description: Message content
+        metadata:
+          type: object
+          default: {}
+          description: Optional metadata for text messages
+
+    ReminderMessage:
+      type: object
+      title: Reminder Message
+      required: [type, message_type, content, metadata]
+      properties:
+        type:
+          type: string
+          enum: [message]
+        message_type:
+          type: string
+          enum: [reminder]
+        content:
+          type: string
+          minLength: 1
+          maxLength: 5000
+        metadata:
+          type: object
+          required: [due_date]
+          properties:
+            due_date:
+              type: string
+              format: date-time
+              description: When the reminder is due
+            priority:
+              type: string
+              enum: [low, medium, high]
+              default: medium
+            assigned_to:
+              type: string
+              format: uuid
+              description: Optional user to assign reminder to
+            tags:
+              type: array
+              items:
+                type: string
+              description: Labels for organizing reminders
+
+    AlertMessage:
+      type: object
+      title: Alert Message
+      required: [type, message_type, content, metadata]
+      properties:
+        type:
+          type: string
+          enum: [message]
+        message_type:
+          type: string
+          enum: [alert]
+        content:
+          type: string
+          minLength: 1
+          maxLength: 5000
+        metadata:
+          type: object
+          required: [alert_level]
+          properties:
+            alert_level:
+              type: string
+              enum: [info, warning, critical]
+              description: Severity of the alert
+            action_url:
+              type: string
+              format: uri
+              description: Optional URL for clickable alerts
+
+    NotificationMessage:
+      type: object
+      title: Notification Message
+      required: [type, message_type, content, metadata]
+      properties:
+        type:
+          type: string
+          enum: [message]
+        message_type:
+          type: string
+          enum: [notification]
+        content:
+          type: string
+          minLength: 1
+          maxLength: 5000
+        metadata:
+          type: object
+          required: [notification_type]
+          properties:
+            notification_type:
+              type: string
+              enum: [general, assignment, mention, update]
+              description: Type of notification
+            target_user_id:
+              type: string
+              format: uuid
+              description: User to target with notification
+
+    TypingIndicator:
+      type: object
+      title: Typing Indicator
+      required: [type, is_typing]
+      properties:
+        type:
+          type: string
+          enum: [typing]
+        is_typing:
+          type: boolean
+          description: Whether user is actively typing
+
+    MessageReaction:
+      type: object
+      title: Message Reaction
+      required: [type, message_id, emoji]
+      properties:
+        type:
+          type: string
+          enum: [reaction]
+        message_id:
+          type: string
+          format: uuid
+          description: ID of message being reacted to
+        emoji:
+          type: string
+          pattern: '[\p{Emoji}]'
+          description: Emoji to react with
+
+    MessageBroadcast:
+      type: object
+      title: Message Broadcast (Server → Client)
+      required: [type, data]
+      properties:
+        type:
+          type: string
+          enum: [message]
+        data:
+          type: object
+          required: [id, content, message_type, sender, channel_id, created_at]
+          properties:
+            id:
+              type: string
+              format: uuid
+            content:
+              type: string
+            message_type:
+              type: string
+              enum: [text, reminder, alert, notification]
+            sender:
+              type: object
+              required: [id, username]
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                username:
+                  type: string
+            channel_id:
+              type: string
+              format: uuid
+            created_at:
+              type: string
+              format: date-time
+            is_edited:
+              type: boolean
+              default: false
+            edited_at:
+              type: string
+              format: date-time
+              nullable: true
+            metadata:
+              type: object
+
+    UserPresence:
+      type: object
+      title: User Presence Event
+      required: [type, user_id, username, timestamp]
+      properties:
+        type:
+          type: string
+          enum: [user_joined, user_left]
+        user_id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    ErrorMessage:
+      type: object
+      title: Error Message
+      required: [type, message]
+      properties:
+        type:
+          type: string
+          enum: [error]
+        message:
+          type: string
+          description: Error description
+        code:
+          type: integer
+          description: Optional error code
+          enum: [4001, 4003]
+
+  securitySchemes:
+    jwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token passed as query parameter (?token=...) or via Authorization header
+
+  correlationIds:
+    roomId:
+      description: Room UUID identifying the chat channel
+      location: '$message.payload#/channel_id'
+
+security:
+  - jwt: []
+
+tags:
+  - name: Messages
+    description: Core message operations (text, reminders, alerts)
+  - name: Presence
+    description: User presence notifications
+  - name: Interactions
+    description: Reactions and typing indicators
+
+externalDocs:
+  url: 'https://github.com/grupus/backend/blob/main/apps/chat/documentation/STEP_2_WEBSOCKET_CONSUMER.md'
+  description: Detailed WebSocket implementation documentation
