@@ -1,28 +1,13 @@
 from django.urls import path, include
-import apps.group.views as views
+from rest_framework.routers import DefaultRouter
+
+from .views.group_views import GroupViewSet
+from .views.group_members_views import GroupMemberViewSet
+
+router = DefaultRouter()
+router.register(r"", GroupViewSet, basename="group")
+router.register(r"member", GroupMemberViewSet, basename="group-member")
 
 urlpatterns = [
-    path(
-        "workspace/<uuid:workspace_id>/create/",
-        views.CreateGroupView.as_view(),
-        name="create-workspace-group",
-    ),
-    path("create/", views.CreateGroupView.as_view(), name="create-group"),
-    path(
-        "leave/<uuid:group_id>/",
-        views.GroupMemberLeaveView.as_view(),
-        name="leave-group",
-    ),
-    path("list/", views.GroupList.as_view(), name="list-groups"),
-    path("<uuid:id>/", views.GroupDetailView.as_view(), name="group-detail"),
-    path(
-        "member/add/<str:access_code>/",
-        views.CreateGroupMemberView.as_view(),
-        name="create-group-member",
-    ),
-    path(
-        "member/list/<uuid:group_id>/",
-        views.GroupMemberList.as_view(),
-        name="list-group-members",
-    ),
+    path("", include(router.urls)),
 ]
