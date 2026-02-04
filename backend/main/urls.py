@@ -38,7 +38,7 @@ app_urlpatterns = [
     path("auth/", include(auth_urls)),
     path("workspace/", include(workspace_urls)),
     path("group/", include(group_urls)),
-    path("channel/", include(channel_urls)),
+    path("channels/", include(channel_urls)),
     path("task/", include(task_urls)),
     path("users/", include(user_urls)),
 ]

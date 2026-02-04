@@ -19,7 +19,6 @@ class GroupSerializer(serializers.ModelSerializer):
             "max_members",
             "member_count",
             "active_member_count",
-            "channel_count",
             "content_guidelines",
             "rules",
         )
@@ -33,7 +32,6 @@ class GroupSerializer(serializers.ModelSerializer):
             "access_code",
             "member_count",
             "active_member_count",
-            "channel_count",
         )
 
 

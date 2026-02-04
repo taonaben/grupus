@@ -4,7 +4,6 @@ from rest_framework import status
 from rest_framework import generics
 from .models import Group, GroupMember
 from apps.workspace.models import Workspace
-from apps.channel.models import Channel
 from apps.task.models import TaskBoard, TaskList
 from .serializers import GroupSerializer, GroupMemberSerializer
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
@@ -49,12 +48,7 @@ class CreateGroupView(generics.CreateAPIView):
             user=request.user, group=group, role=GroupMember.Role.ADMIN
         )
 
-        # create default channel
-        Channel.objects.create(
-            name="general",
-            group=group,
-            created_by=request.user,
-        )
+   
 
         task_board = TaskBoard.objects.create(
             group=group,

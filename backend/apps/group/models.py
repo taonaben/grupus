@@ -63,7 +63,6 @@ class Group(models.Model):
     # stats
     member_count = models.PositiveIntegerField(default=0)
     active_member_count = models.PositiveIntegerField(default=0)
-    channel_count = models.PositiveIntegerField(default=0)
 
     # rules & guidelines
     content_guidelines = models.TextField(blank=True, null=True)
