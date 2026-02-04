@@ -1,25 +1,13 @@
-from django.urls import path
-import apps.workspace.views as views
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+
+from .views.workspace_views import WorkspaceViewSet
+from .views.workspace_members_views import SpaceMemberViewSet
+
+router = DefaultRouter()
+router.register(r"", WorkspaceViewSet, basename="workspace")
+router.register(r"members", SpaceMemberViewSet, basename="workspace-member")
 
 urlpatterns = [
-    # path("admin/", admin.site.urls),
-    path("create/", views.CreateWorkspaceView.as_view(), name="create-workspace"),
-    path("list/", views.WorkspaceList.as_view(), name="workspace-list"),
-    path(
-        "leave/<uuid:workspace_id>/",
-        views.WorkspaceMemberLeaveView.as_view(),
-        name="leave-workspace",
-    ),
-    path("<uuid:id>/", views.WorkspaceDetailView.as_view(), name="workspace-detail"),
-    # S P A C E  M E M B E R  R O U T E S
-    path(
-        "members/add/<str:access_code>/",
-        views.CreateSpaceMemberView.as_view(),
-        name="create-space-member",
-    ),
-    path(
-        "members/<uuid:workspace_id>/",
-        views.SpaceMembersList.as_view(),
-        name="space-member-list",
-    ),
+    path("", include(router.urls)),
 ]
