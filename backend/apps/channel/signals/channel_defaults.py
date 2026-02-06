@@ -25,6 +25,10 @@ def create_channel_defaults_for_group(sender, instance, created, **kwargs):
                 group=instance,
                 created_by=instance.created_by,
             )
+            
+            instance.channel_count = F("channel_count") + 1
+            instance.save(update_fields=["channel_count"])
+            instance.refresh_from_db(fields=["channel_count"])
     except Exception as e:
         # Log the exception or handle it as needed
         logger.error(f"Error creating default channel for group {instance.id}: {e}")
@@ -51,6 +55,10 @@ def create_channel_defaults_for_workspace(sender, instance, created, **kwargs):
                 workspace=instance,
                 created_by=instance.created_by,
             )
+            
+            instance.channel_count = F("channel_count") + 1
+            instance.save(update_fields=["channel_count"])
+            instance.refresh_from_db(fields=["channel_count"])
     except Exception as e:
         # Log the exception or handle it as needed
         logger.error(f"Error creating default channel for workspace {instance.id}: {e}")
