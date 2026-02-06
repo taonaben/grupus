@@ -3,6 +3,11 @@ from .models import Workspace, SpaceMember, WorkspaceType
 
 
 class WorkspaceSerializer(serializers.ModelSerializer):
+
+    workspace_type_name = serializers.CharField(
+        source="workspace_type.name", read_only=True
+    )
+
     class Meta:
         model = Workspace
         fields = "__all__"
@@ -15,6 +20,7 @@ class WorkspaceSerializer(serializers.ModelSerializer):
             "member_count",
             "channel_count",
             "group_count",
+            "workspace_type_name",
         )
 
     def validate(self, data):
