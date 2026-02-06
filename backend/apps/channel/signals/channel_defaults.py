@@ -4,7 +4,7 @@ from django.db import transaction
 from django.db.models import F
 from apps.group.models import Group
 from apps.workspace.models import Workspace
-from backend.apps.channel.models import Channel
+from apps.channel.models import Channel
 import logging
 
 logger = logging.getLogger(__name__)

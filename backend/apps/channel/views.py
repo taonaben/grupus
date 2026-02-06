@@ -3,7 +3,6 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from apps.workspace.models import Workspace, SpaceMember
-from apps.group.models import Group, GroupMember
 from .models import Channel
 from .serializers import ChannelSerializer
 
@@ -31,7 +30,7 @@ class ChannelViewSet(viewsets.ModelViewSet):
             )
 
         return (
-            queryset.select_related("workspace", "group", "created_by")
+            queryset.select_related("workspace", "created_by")
             .distinct()
             .order_by("-created_at")
         )

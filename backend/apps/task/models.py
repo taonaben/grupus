@@ -75,8 +75,13 @@ class TaskAssignment(models.Model):
     task = models.ForeignKey(
         "Task", on_delete=models.CASCADE, related_name="assignments"
     )
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.UUIDField()
+    content_type = models.ForeignKey(
+        ContentType,
+        on_delete=models.CASCADE,
+        related_name="task_assignments",
+        null=True,
+    )
+    object_id = models.UUIDField(null=True)
     assigned_to = GenericForeignKey("content_type", "object_id")
 
     assigned_by = models.ForeignKey(

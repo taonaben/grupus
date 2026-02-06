@@ -25,7 +25,22 @@ logger = logging.getLogger(__name__)
     list=extend_schema(summary="List tasks"),
     create=extend_schema(
         summary="Create a task",
-        description="Create a new task with optional user/group assignments",
+        description="""Create a new task with optional user/group assignments
+        
+        Example assigned_to format:
+       
+        [
+            {
+                "type": "user",
+                "id": "user-uuid-here"
+            },
+            {
+                "type": "group",
+                "id": "group-uuid-here"
+            },
+        ]
+        \n\n
+        """,
     ),
     retrieve=extend_schema(summary="Get task details"),
     update=extend_schema(summary="Update task"),
@@ -255,39 +270,3 @@ class TaskViewSet(viewsets.ModelViewSet):
                     continue
 
         return Response(self.get_serializer(task).data, status=status.HTTP_201_CREATED)
-
-
-class TaskCardList(generics.ListAPIView):
-    queryset = Task.objects.all()
-    serializer_class = TaskSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        task_list_id = self.request.query_params.get("task_list_id")
-
-        logger.info(f"task_list_id: {task_list_id}")
-
-        queryset = Task.objects.all()
-
-        if task_list_id:
-            logger.info("found task_list id in params")
-            queryset = queryset.filter(
-                task_list_id=task_list_id,
-            )
-
-        return (
-            queryset.select_related("task_list", "created_by")
-            .distinct()
-            .order_by("-created_at")
-        )
-
-    def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data, status=status.HTTP_200)
