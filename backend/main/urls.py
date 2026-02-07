@@ -16,7 +16,7 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -26,6 +26,7 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
     SpectacularRedocView,
 )
+import djoser
 from apps.workspace.urls import urlpatterns as workspace_urls
 from apps.group.urls import urlpatterns as group_urls
 from apps.channel.urls import urlpatterns as channel_urls
@@ -52,7 +53,13 @@ third_party_urlpatterns = [
     # optional ui:
     path("api/schema/swagger-ui/", SpectacularSwaggerView.as_view(), name="swagger-ui"),
     path("api/schema/redoc/", SpectacularRedocView.as_view(), name="redoc"),
+    
+    #DJoser endpoints
+    re_path("auth/", include("djoser.urls")),
+    re_path("auth/", include("djoser.urls.jwt")),
 ]
+
+
 
 
 urlpatterns = [

@@ -52,7 +52,6 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     #! Third-party apps
-    "corsheaders",
     "rest_framework",
     "drf_yasg",
     "channels",
@@ -62,7 +61,8 @@ INSTALLED_APPS = [
     "drf_spectacular",
     # "django_filters",
     # "django_celery_beat",
-    # "corsheaders",
+    "corsheaders",
+    "djoser",
     # "django_extensions",
     #! Local apps
     "apps.chat",
@@ -76,9 +76,10 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    # "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
+    
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -231,6 +232,17 @@ REST_FRAMEWORK = {
     "PAGE_SIZE": 50,
 }
 
+DJOSER = {
+    "LOGIN_FIELD": "username",
+    "USER_ID_FIELD": "id",
+    "SERIALIZERS": {
+        "user_create": "apps.user.serializers.UserCreateSerializer",
+        "user": "apps.user.serializers.UserSerializer",
+        "current_user": "apps.user.serializers.UserSerializer",
+    },
+    "TOKEN_MODEL": None,
+}
+
 SIMPLE_JWT = {
     # TODO: adjust token lifetimes when pushing to production
     "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
@@ -257,15 +269,6 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
 }
 
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/1",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        },
-    }
-}
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # React
