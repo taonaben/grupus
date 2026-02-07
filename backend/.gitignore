@@ -1,2 +1,2 @@
-staticfiles
+./staticfiles/*
 test_db

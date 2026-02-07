@@ -4,6 +4,9 @@ from apps.workspace.models import Workspace
 from apps.group.models import Group
 import uuid
 import logging
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +40,6 @@ class TaskBoard(models.Model):
 
 
 class TaskList(models.Model):
-
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     task_board = models.ForeignKey(
         TaskBoard, on_delete=models.CASCADE, related_name="task_lists"
@@ -73,13 +75,15 @@ class TaskAssignment(models.Model):
     task = models.ForeignKey(
         "Task", on_delete=models.CASCADE, related_name="assignments"
     )
-    assigned_to = models.ForeignKey(
-        User,
+    content_type = models.ForeignKey(
+        ContentType,
         on_delete=models.CASCADE,
-        related_name="tasks_assigned_to_me",
+        related_name="task_assignments",
         null=True,
-        blank=True,
     )
+    object_id = models.UUIDField(null=True)
+    assigned_to = GenericForeignKey("content_type", "object_id")
+
     assigned_by = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
@@ -101,7 +105,10 @@ class TaskAssignment(models.Model):
     notes = models.TextField(blank=True, null=True)
 
     class Meta:
-        unique_together = ["task", "assigned_to"]
+        unique_together = ["task", "content_type", "object_id"]
+        indexes = [
+            models.Index(fields=["content_type", "object_id"]),
+        ]
 
     def __str__(self):
         return f"{self.assigned_to} assigned to {self.task.title}"
@@ -114,13 +121,6 @@ class Task(models.Model):
     )
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
-    assigned_to = models.ManyToManyField(
-        User,
-        through=TaskAssignment,
-        through_fields=("task", "assigned_to"),
-        related_name="tasks_assigned",
-        blank=True,
-    )
     position = models.PositiveIntegerField(default=0)
     due_date = models.DateTimeField(null=True, blank=True)
     is_completed = models.BooleanField(default=False)

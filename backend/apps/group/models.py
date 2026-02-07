@@ -10,7 +10,6 @@ import time
 
 # Create your models here.
 class Group(models.Model):
-
     def generate_access_code():
         MAX_ATTEMPTS = 10
         chars = string.ascii_uppercase + string.digits

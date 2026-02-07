@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("workspace", "0002_alter_workspace_access_code_alter_workspace_rules"),
     ]

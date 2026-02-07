@@ -4,15 +4,17 @@ services:
   backend:
     build: ./backend
     container_name: grupus_backend
-    command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - ./backend:/app
     ports:
       - "8000:8000"
     env_file:
       - .env
+    environment:
+      - DJANGO_ENV=development
     depends_on:
       - db
+      - redis
 
   db:
     image: postgres:15
@@ -25,8 +27,19 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     restart: unless-stopped
 
+  redis:
+    image: redis:7-alpine
+    container_name: grupus_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+
 volumes:
   postgres_data:
     # external: true
     # name: grupus-data
+  redis_data:
 

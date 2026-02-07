@@ -1,35 +1,15 @@
-from django.urls import path
-from .views import (
-    CreateTaskBoardView,
-    TaskBoardList,
-    CreateTaskListView,
-    TaskListList,
-    ChangeTaskListPosition,
-    CreateTaskView,
-    TaskCardList,
-    GetTaskBoardMembersView,
-)
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+
+from .views.task_board_views import TaskBoardViewSet
+from .views.task_list_views import TaskListViewSet
+from .views.task_card_views import TaskViewSet
+
+router = DefaultRouter()
+router.register(r"board", TaskBoardViewSet, basename="task-board")
+router.register(r"list", TaskListViewSet, basename="task-list")
+router.register(r"task", TaskViewSet, basename="task")
 
 urlpatterns = [
-    #! T A S K   B O A R D   U R L S
-    path("create-board/", view=CreateTaskBoardView.as_view(), name="create_board"),
-    path("list-board/", view=TaskBoardList.as_view(), name="list_task_boards"),
-    path(
-        "board/<uuid:task_board_id>/members/",
-        view=GetTaskBoardMembersView.as_view(),
-        name="get_board_members",
-    ),
-    #! T A S K   L I S T   U R L S
-    path(
-        "create-task_list/", view=CreateTaskListView.as_view(), name="create_task_list"
-    ),
-    path("list-task_list/", view=TaskListList.as_view(), name="list_task_lists"),
-    path(
-        "<uuid:task_board_id>/reorder-list/",
-        view=ChangeTaskListPosition.as_view(),
-        name="change_task_list_position",
-    ),
-    #! T A S K   U R L S
-    path("create-task/", view=CreateTaskView.as_view(), name="create_task", ),
-    path("list-task_card/", view=TaskCardList.as_view(), name="list_tasks"),
+    path("", include(router.urls)),
 ]

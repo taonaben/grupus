@@ -7,7 +7,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("badges", "0001_initial"),
         ("user", "0002_alter_user_notification_settings"),
