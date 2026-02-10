@@ -1,8 +1,10 @@
-from django.urls import path
-import apps.authentication.views as views
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from . import views
 
+router = DefaultRouter()
+router.register(r"", views.AuthenticationViewSet, basename="authentication")
 
 urlpatterns = [
-    path("login/", views.LoginView.as_view(), name="login_user"),
-    path("logout/", views.LogoutView.as_view(), name="logout"),
+    path("", include(router.urls)),
 ]

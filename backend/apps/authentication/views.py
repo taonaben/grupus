@@ -1,20 +1,33 @@
-from rest_framework import status, generics
+import email
+from rest_framework import status, viewsets
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.parsers import JSONParser
+from rest_framework.decorators import action
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import LoginSerializer, LogoutSerializer
-from rest_framework.views import APIView
+from django.core.mail import send_mail
+from django.utils import timezone
+from datetime import timedelta
+
+from .models import OTP
+from .serializers import (
+    LoginSerializer,
+    LogoutSerializer,
+    OTPSerializer,
+    OTPVerificationSerializer,
+)
 
 
-class LoginView(generics.GenericAPIView):
-    """Handle user login and return JWT tokens"""
+class AuthenticationViewSet(viewsets.ViewSet):
+    """Handle authentication including login, logout, and OTP"""
 
     permission_classes = [AllowAny]
     parser_classes = [JSONParser]
 
-    def post(self, request, *args, **kwargs):
+    @action(detail=False, methods=["post"], url_path="login")
+    def login(self, request):
+        """Handle user login and return JWT tokens"""
         serializer = LoginSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -40,23 +53,23 @@ class LoginView(generics.GenericAPIView):
             {"detail": "Invalid credentials."}, status=status.HTTP_401_UNAUTHORIZED
         )
 
+    @action(
+        detail=False,
+        methods=["post"],
+        url_path="logout",
+        permission_classes=[IsAuthenticated],
+    )
+    def logout(self, request):
+        """
+        Handle user logout by blacklisting JWT refresh tokens.
 
-class LogoutView(generics.GenericAPIView):
-    """
-    Handle user logout by blacklisting JWT refresh tokens.
+        Requires authentication to access this endpoint.
 
-    Requires authentication to access this endpoint.
-
-    Request body:\n
-        - refresh: JWT refresh token to blacklist (required)\n
-    Response:\n
-        - detail: Success or error message
-    """
-
-    permission_classes = [IsAuthenticated]
-    parser_classes = [JSONParser]
-
-    def post(self, request):
+        Request body:\n
+            - refresh: JWT refresh token to blacklist (required)\n
+        Response:\n
+            - detail: Success or error message
+        """
         try:
             serializer = LogoutSerializer(data=request.data)
             if not serializer.is_valid():
@@ -74,3 +87,73 @@ class LogoutView(generics.GenericAPIView):
                 {"error": str(e)},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+    @action(detail=False, methods=["post"], url_path="request-otp")
+    def request_otp(self, request):
+        """Request an OTP to be sent to email"""
+        serializer = OTPVerificationSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                {"detail": "Email is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        email = serializer.validated_data.get("email")
+
+        # Rate limiting: Check if OTP was requested recently
+        otp = OTP.objects.filter(email=email).first()
+        if otp and otp.created_at > timezone.now() - timedelta(minutes=1):
+            return Response(
+                {"detail": "OTP already sent. Please wait before requesting another."},
+                status=status.HTTP_429_TOO_MANY_REQUESTS,
+            )
+
+        # Create or regenerate OTP
+        otp, created = OTP.objects.get_or_create(email=email)
+        if not created:
+            otp.token = OTP.generate_token()
+            otp.created_at = timezone.now()  # Reset timestamp
+            otp.save()
+
+        # Send email
+        try:
+            send_mail(
+                subject="Your Grupus OTP Token",
+                message=f"Your OTP token is: {otp.token}",
+                from_email="noreply@grupus.com",
+                recipient_list=[email],
+                fail_silently=False,
+            )
+            return Response(
+                {"detail": "OTP sent to your email."},
+                status=status.HTTP_200_OK,
+            )
+        except Exception as e:
+            return Response(
+                {"detail": "Failed to send OTP. Please try again."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    @action(detail=False, methods=["post"], url_path="verify-otp")
+    def verify_otp(self, request):
+        """Verify an OTP token"""
+        serializer = OTPVerificationSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                {"detail": "Email and token are required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        email = serializer.validated_data.get("email")
+        token = serializer.validated_data.get("token")
+
+        otp = OTP.objects.filter(email=email, token=token).first()
+        if otp and not otp.is_expired():
+            return Response(
+                {"detail": "OTP is valid."},
+                status=status.HTTP_200_OK,
+            )
+        return Response(
+            {"detail": "Invalid or expired OTP."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )

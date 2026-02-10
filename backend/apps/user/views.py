@@ -50,6 +50,36 @@ class UserViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_201_CREATED,
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=False, methods=["post"])
+    def verify_email(self, request):
+        """Verify user's email by sending a one-time token to the user's email address"""
+        email = request.data.get("email")
+        random_token = get_random_string(length=6)
+        if not email:
+            return Response(
+                {"detail": "Email is required"}, status=status.HTTP_400_BAD_REQUEST
+            )
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response(
+                {"detail": "User with this email does not exist"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        # Here you would send the random_token to the user's email address
+        # For example, using Django's send_mail function or any email service
+        send_mail(
+            'Your verification token',
+            f'Your verification token is: {random_token}',
+            'from@example.com',
+            [email],
+            fail_silently=False,
+        )
+        return Response(
+            {"detail": "Verification token sent to email"},
+            status=status.HTTP_200_OK,
+        )
 
     @action(detail=False, methods=["post"])
     def login(self, request):

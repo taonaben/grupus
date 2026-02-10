@@ -79,7 +79,6 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
-    
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -286,6 +285,14 @@ CORS_ALLOW_METHODS = list(default_methods) + ["POST", "OPTIONS"]
 CORS_ALLOW_ALL_ORIGINS = os.getenv("CORS_ALLOW_ALL_ORIGINS", "False") == "True"
 CORS_ALLOW_CREDENTIALS = True
 
+# from celery.schedules import crontab
+# CELERY_BEAT_SCHEDULE = {
+#     'cleanup-expired-otps': {
+#         'task': 'apps.authentication.tasks.cleanup_expired_otps',
+#         'schedule': crontab(minute='*/10'),
+#     },
+# }
+
 
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
@@ -293,6 +300,20 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 MEDIA_URL = "/media/"
 
+if DEBUG:
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_HOST = "smtp.gmail.com"
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")  # your-email@gmail.com
+    EMAIL_HOST_PASSWORD = os.environ.get(
+        "EMAIL_HOST_PASSWORD"
+    )  # App password, NOT your Gmail password
+    DEFAULT_FROM_EMAIL = os.environ.get("EMAIL_HOST_USER")
+else:
+    EMAIL_BACKEND = "sendgrid_backend.SendgridBackend"
+    SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY")
+    DEFAULT_FROM_EMAIL = "noreply@grupus.com"
 
 CACHES = {
     "default": {
