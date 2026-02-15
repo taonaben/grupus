@@ -71,11 +71,8 @@ class AuthenticationViewSet(viewsets.ViewSet):
             - detail: Success or error message
         """
         try:
-            serializer = LogoutSerializer(data=request.data)
-            if not serializer.is_valid():
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-            refresh_token = serializer.validated_data.get("refresh")
+            refresh_token = request.data.get("refresh")
             token = RefreshToken(refresh_token)
             token.blacklist()
             return Response(
@@ -91,14 +88,13 @@ class AuthenticationViewSet(viewsets.ViewSet):
     @action(detail=False, methods=["post"], url_path="request-otp")
     def request_otp(self, request):
         """Request an OTP to be sent to email"""
-        serializer = OTPVerificationSerializer(data=request.data)
-        if not serializer.is_valid():
+
+        email = request.data.get("email")
+        if not email:
             return Response(
                 {"detail": "Email is required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
-        email = serializer.validated_data.get("email")
 
         # Rate limiting: Check if OTP was requested recently
         otp = OTP.objects.filter(email=email).first()
@@ -137,23 +133,39 @@ class AuthenticationViewSet(viewsets.ViewSet):
     @action(detail=False, methods=["post"], url_path="verify-otp")
     def verify_otp(self, request):
         """Verify an OTP token"""
-        serializer = OTPVerificationSerializer(data=request.data)
-        if not serializer.is_valid():
+
+        email = request.data.get("email")
+        token = request.data.get("token")
+
+        if not email or not token:
             return Response(
                 {"detail": "Email and token are required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        email = serializer.validated_data.get("email")
-        token = serializer.validated_data.get("token")
+        # DEBUG: Check what exists for this email
+        otp_record = OTP.objects.filter(email=email).first()
+        if otp_record:
+            print(f"Found OTP for {email}")
+            print(f"Stored token: {otp_record.token} (type: {type(otp_record.token)})")
+            print(f"Received token: {token} (type: {type(token)})")
+            print(f"Converted token: {int(token)} (type: {type(int(token))})")
+            print(f"Tokens match: {otp_record.token == int(token)}")
+            print(f"Is expired: {otp_record.is_expired()}")
+            print(f"Expires at: {otp_record.expires_at}")
+            print(f"Current time: {timezone.now()}")
+        else:
+            print(f"No OTP found for email: {email}")
 
-        otp = OTP.objects.filter(email=email, token=token).first()
+        otp = OTP.objects.filter(email=email, token=int(token)).first()
+
         if otp and not otp.is_expired():
             return Response(
                 {"detail": "OTP is valid."},
                 status=status.HTTP_200_OK,
             )
-        return Response(
-            {"detail": "Invalid or expired OTP."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+        else:
+            return Response(
+                {"detail": "Invalid or expired OTP."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )

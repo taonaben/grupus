@@ -7,6 +7,11 @@ from datetime import timedelta
 import random
 
 
+def get_otp_expiry():
+    """Return OTP expiration time (10 minutes from now)"""
+    return timezone.now() + timedelta(minutes=10)
+
+
 # Create your models here.
 class OTP(models.Model):
 
@@ -28,9 +33,12 @@ class OTP(models.Model):
     email = models.EmailField(unique=True)
     token = models.PositiveBigIntegerField(default=generate_token, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    expires_at = models.DateTimeField(
-        default= timezone.now() + timedelta(minutes=10)
-    )
+    expires_at = models.DateTimeField()
+
+    def save(self, *args, **kwargs):
+        if self._state.adding:  # Only set expires_at when creating a new OTP
+            self.expires_at = timezone.now() + timedelta(minutes=10)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"OTP for {self.email}"

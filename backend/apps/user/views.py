@@ -102,6 +102,8 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(
             {"detail": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED
         )
+    
+    
 
     @action(detail=False, methods=["get"])
     def me(self, request):

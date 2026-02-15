@@ -10,6 +10,7 @@ class User(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     username = models.CharField(max_length=50, unique=True)
     email = models.EmailField(unique=True)
+    is_email_verified = models.BooleanField()
     is_active = models.BooleanField(default=True)
     date_joined = models.DateTimeField(auto_now_add=True)
     last_login = models.DateTimeField(auto_now=True)
@@ -25,9 +26,7 @@ class UserProfile(models.Model):
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
     bio = models.TextField(blank=True, null=True)
-    profile_picture = models.ImageField(
-        upload_to="profile_pics/", blank=True, null=True
-    )
+    profile_picture = models.CharField(max_length=255, blank=True, null=True)
     preferred_language = models.CharField(max_length=10, default="en")
     notification_settings = models.JSONField(default=dict, null=True, blank=True)
 

@@ -12,10 +12,17 @@ class UserCreateSerializer(serializers.ModelSerializer):
     password2 = serializers.CharField(write_only=True, required=True, min_length=8)
     first_name = serializers.CharField(required=True)
     last_name = serializers.CharField(required=True)
-    bio = serializers.CharField(required=False, allow_blank=True)
-    profile_picture = serializers.ImageField(required=False, allow_null=True)
-    preferred_language = serializers.CharField(required=False, default="en")
-    notification_settings = serializers.JSONField(required=False, default=dict)
+    bio = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    is_email_verified = serializers.BooleanField(required=True)
+    profile_picture = serializers.CharField(
+        required=False, allow_blank=True, allow_null=True
+    )
+    preferred_language = serializers.CharField(
+        required=False, default="en", allow_null=True
+    )
+    notification_settings = serializers.JSONField(
+        required=False, default=dict, allow_null=True
+    )
 
     class Meta:
         model = User
@@ -27,6 +34,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "bio",
+            "is_email_verified",
             "profile_picture",
             "preferred_language",
             "notification_settings",
@@ -157,5 +165,6 @@ class UserSerializer(serializers.ModelSerializer):
             "profile",
             "stats",
             "subscription",
+            "is_email_verified",
         ]
         read_only_fields = ["id"]

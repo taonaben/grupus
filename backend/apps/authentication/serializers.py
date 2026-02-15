@@ -20,8 +20,7 @@ class OTPSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OTP
-        fields = ["email", "token"]
-        read_only_fields = ["token"]
+        fields = ["email"]
 
 
 class OTPVerificationSerializer(serializers.Serializer):
