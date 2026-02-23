@@ -95,14 +95,7 @@ class WorkspaceType(models.Model):
             if field_def.get("required", False) and field_name not in data:
                 errors.append(f"Required field '{field_name}' is missing.")
 
-        # Check for extra fields not in schema
-        for field_name in data.keys():
-            if field_name not in fields_schema:
-                errors.append(
-                    f"Field '{field_name}' is not allowed for this workspace type."
-                )
-
-        # Validate field types
+        # Validate field types (only for fields actually present in data)
         for field_name, value in data.items():
             if field_name in fields_schema:
                 field_def = fields_schema[field_name]
