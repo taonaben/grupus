@@ -5,6 +5,18 @@ from apps.user import models
 User = get_user_model()
 
 
+class StringKeyedJSONField(serializers.JSONField):
+    """Custom JSONField that ensures all keys are strings for type safety in frontend"""
+
+    def to_representation(self, value):
+        if value is None:
+            return None
+        if isinstance(value, dict):
+            # Convert all keys to strings to match Map<String, dynamic> in Flutter
+            return {str(k): v for k, v in value.items()}
+        return value
+
+
 class UserCreateSerializer(serializers.ModelSerializer):
     """Serializer for user registration with profile details"""
 
@@ -20,7 +32,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
     preferred_language = serializers.CharField(
         required=False, default="en", allow_null=True
     )
-    notification_settings = serializers.JSONField(
+    notification_settings = StringKeyedJSONField(
         required=False, default=dict, allow_null=True
     )
 
@@ -73,6 +85,8 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
 class UserProfileSerializer(serializers.ModelSerializer):
     """Serializer for user's profile details"""
+
+    notification_settings = StringKeyedJSONField(required=False, allow_null=True)
 
     class Meta:
         model = models.UserProfile
