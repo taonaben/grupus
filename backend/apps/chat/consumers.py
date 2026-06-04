@@ -82,12 +82,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
         # Notify others in the room
         await self.channel_layer.group_send(
             self.room_group_name,
-            {
-                "type": "user_joined",
-                "user_id": str(self.user_id),
-                "username": self.user.username,
-                "timestamp": datetime.now().isoformat(),
-            },
+            self._msgpack_safe(
+                {
+                    "type": "user_joined",
+                    "user_id": str(self.user_id),
+                    "username": self.user.username,
+                    "timestamp": datetime.now().isoformat(),
+                }
+            ),
         )
 
     async def disconnect(self, close_code):
@@ -102,12 +104,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
             if self.user_id:
                 await self.channel_layer.group_send(
                     self.room_group_name,
-                    {
-                        "type": "user_left",
-                        "user_id": str(self.user_id),
-                        "username": self.user.username,
-                        "timestamp": datetime.now().isoformat(),
-                    },
+                    self._msgpack_safe(
+                        {
+                            "type": "user_left",
+                            "user_id": str(self.user_id),
+                            "username": self.user.username,
+                            "timestamp": datetime.now().isoformat(),
+                        }
+                    ),
                 )
 
             # Leave room group
@@ -255,10 +259,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
         # Broadcast to room
         await self.channel_layer.group_send(
             self.room_group_name,
-            {
-                "type": "chat_message",
-                "message": message_data,
-            },
+            self._msgpack_safe(
+                {
+                    "type": "chat_message",
+                    "message": message_data,
+                }
+            ),
         )
 
         logger.info(f"Message saved: {message.id} from {self.user_id}")
@@ -273,13 +279,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         await self.channel_layer.group_send(
             self.room_group_name,
-            {
-                "type": "user_typing",
-                "user_id": str(self.user_id),
-                "username": self.user.username,
-                "is_typing": is_typing,
-                "timestamp": datetime.now().isoformat(),
-            },
+            self._msgpack_safe(
+                {
+                    "type": "user_typing",
+                    "user_id": str(self.user_id),
+                    "username": self.user.username,
+                    "is_typing": is_typing,
+                    "timestamp": datetime.now().isoformat(),
+                }
+            ),
         )
 
     async def _handle_reaction(self, data: Dict[str, Any]):
@@ -311,15 +319,29 @@ class ChatConsumer(AsyncWebsocketConsumer):
         # Broadcast to room
         await self.channel_layer.group_send(
             self.room_group_name,
-            {
-                "type": "message_reaction",
-                "message_id": message_id,
-                "user_id": str(self.user_id),
-                "username": self.user.username,
-                "emoji": emoji,
-                "timestamp": datetime.now().isoformat(),
-            },
+            self._msgpack_safe(
+                {
+                    "type": "message_reaction",
+                    "message_id": message_id,
+                    "user_id": str(self.user_id),
+                    "username": self.user.username,
+                    "emoji": emoji,
+                    "timestamp": datetime.now().isoformat(),
+                }
+            ),
         )
+
+    def _msgpack_safe(self, value):
+        """Recursively convert non-msgpack types (UUID, datetime) to strings."""
+        if isinstance(value, dict):
+            return {str(k): self._msgpack_safe(v) for k, v in value.items()}
+        if isinstance(value, list):
+            return [self._msgpack_safe(v) for v in value]
+        if isinstance(value, tuple):
+            return [self._msgpack_safe(v) for v in value]
+        if isinstance(value, (UUID, datetime)):
+            return str(value)
+        return value
 
     # ========== Group Message Handlers (Channels) ==========
 

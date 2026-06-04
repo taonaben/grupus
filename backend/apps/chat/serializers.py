@@ -101,6 +101,7 @@ class MessageWebSocketSerializer(serializers.ModelSerializer):
     """
 
     sender = serializers.SerializerMethodField()
+    channel_id = serializers.SerializerMethodField()
 
     class Meta:
         model = Message
@@ -119,6 +120,9 @@ class MessageWebSocketSerializer(serializers.ModelSerializer):
             "id": str(obj.sender.id),
             "username": obj.sender.username,
         }
+
+    def get_channel_id(self, obj):
+        return str(obj.channel_id)
 
 
 class BulkMessageSerializer(serializers.ModelSerializer):
