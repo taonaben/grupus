@@ -33,7 +33,7 @@ from apps.channel.urls import urlpatterns as channel_urls
 from apps.task.urls import urlpatterns as task_urls
 from apps.user.urls import urlpatterns as user_urls
 from apps.authentication.urls import urlpatterns as auth_urls
-
+from apps.chat.urls import urlpatterns as chat_urls
 
 app_urlpatterns = [
     path("auth/", include(auth_urls)),
@@ -42,6 +42,7 @@ app_urlpatterns = [
     path("channels/", include(channel_urls)),
     path("work/", include(task_urls)),
     path("users/", include(user_urls)),
+    path("chat/", include(chat_urls)),
 ]
 
 third_party_urlpatterns = [
@@ -53,13 +54,10 @@ third_party_urlpatterns = [
     # optional ui:
     path("api/schema/swagger-ui/", SpectacularSwaggerView.as_view(), name="swagger-ui"),
     path("api/schema/redoc/", SpectacularRedocView.as_view(), name="redoc"),
-    
-    #DJoser endpoints
+    # DJoser endpoints
     re_path("auth/", include("djoser.urls")),
     re_path("auth/", include("djoser.urls.jwt")),
 ]
-
-
 
 
 urlpatterns = [

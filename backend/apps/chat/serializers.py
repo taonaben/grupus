@@ -31,6 +31,16 @@ class MessageSerializer(serializers.ModelSerializer):
     message_type_display = serializers.CharField(
         source="get_message_type_display", read_only=True
     )
+    client_message_id = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+    )
+    client_mutation_id = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        allow_null=True,
+    )
 
     class Meta:
         model = Message
@@ -43,6 +53,11 @@ class MessageSerializer(serializers.ModelSerializer):
             "sender_username",
             "channel_id",
             "channel_name",
+            "client_message_id",
+            "client_mutation_id",
+            "server_sequence",
+            "version",
+            "deleted_at",
             "metadata",
             "reactions",
             "is_edited",
@@ -58,6 +73,8 @@ class MessageSerializer(serializers.ModelSerializer):
             "channel_name",
             "message_type_display",
             "reactions",
+            "server_sequence",
+            "deleted_at",
             "edited_at",
             "created_at",
             "updated_at",
@@ -74,11 +91,17 @@ class MessageSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         """Cross-field validation for message content and type."""
-        message_type = attrs.get("message_type", MessageType.TEXT)
-        content = attrs.get("content", "")
+        message_type = attrs.get(
+            "message_type",
+            getattr(self.instance, "message_type", MessageType.TEXT),
+        )
+        content = attrs.get("content")
 
-        # Text messages must have content
-        if message_type == MessageType.TEXT and not content.strip():
+        if (
+            message_type == MessageType.TEXT
+            and (content is not None or not self.partial)
+            and not (content or "").strip()
+        ):
             raise serializers.ValidationError(
                 {"content": "Text messages must have non-empty content"}
             )
@@ -111,9 +134,17 @@ class MessageWebSocketSerializer(serializers.ModelSerializer):
             "message_type",
             "sender",
             "channel_id",
+            "client_message_id",
+            "server_sequence",
+            "version",
+            "deleted_at",
             "metadata",
             "created_at",
+            "updated_at",
         ]
+        extra_kwargs = {
+            "client_message_id": {"validators": []},
+        }
 
     def get_sender(self, obj):
         return {

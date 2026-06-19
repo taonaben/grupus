@@ -21,8 +21,8 @@ from django.contrib.auth.models import AnonymousUser
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 
+from . import services
 from .models import Message, MessageType
-from .serializers import MessageWebSocketSerializer
 from apps.channel.models import Channel
 from apps.user.models import User
 
@@ -68,7 +68,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         # Verify channel access
         try:
             await self._verify_channel_access()
-        except Exception as e:
+        except services.ChatServiceError as e:
             logger.error(f"Channel access denied for {self.user_id}: {str(e)}")
             await self.close(code=4003, reason="Access denied")
             return
@@ -205,21 +205,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         - User is the channel creator, OR
         - User has explicit access (can be extended)
         """
-        self.channel = await self._get_channel(self.room_id)
-
-        if not self.channel:
-            raise Exception(f"Channel {self.room_id} not found")
-
-        # Allow access if channel is not private
-        if not self.channel.is_private:
-            return
-
-        # Allow if user is the creator
-        if self.channel.created_by_id == self.user_id:
-            return
-
-        # TODO: Add workspace/group membership checks for private channels
-        raise Exception("Access denied to private channel")
+        self.channel = await self._get_channel_for_user(self.room_id)
 
     async def _handle_message(self, data: Dict[str, Any]):
         """
@@ -233,36 +219,31 @@ class ChatConsumer(AsyncWebsocketConsumer):
         content = data.get("content", "").strip()
         metadata = data.get("metadata", {})
 
-        # Validate message
-        if not content:
-            await self.send_error("Message content cannot be empty")
-            return
-
-        if message_type not in dict(MessageType.choices):
-            await self.send_error(f"Invalid message type: {message_type}")
-            return
-
-        # Save message to database
         try:
             message = await self._save_message(
-                content=content, message_type=message_type, metadata=metadata
+                content=content,
+                message_type=message_type,
+                metadata=metadata,
+                client_message_id=data.get("client_message_id"),
+                client_mutation_id=data.get("client_mutation_id"),
             )
+        except services.ChatServiceError as e:
+            await self.send_error(e.detail)
+            return
         except Exception as e:
             logger.error(f"Error saving message: {str(e)}")
             await self.send_error("Failed to save message")
             return
 
-        # Serialize message for broadcast
-        serializer = MessageWebSocketSerializer(message)
-        message_data = serializer.data
-
-        # Broadcast to room
         await self.channel_layer.group_send(
             self.room_group_name,
             self._msgpack_safe(
                 {
-                    "type": "chat_message",
-                    "message": message_data,
+                    "type": "chat_message_event",
+                    "payload": services.build_message_event_payload(
+                        message,
+                        "message.created",
+                    ),
                 }
             ),
         )
@@ -362,6 +343,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
             )
         )
 
+    async def chat_message_event(self, event):
+        await self.send(text_data=json.dumps(event["payload"]))
+
     async def user_joined(self, event):
         """
         Broadcast user join notification.
@@ -449,29 +433,27 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return None
 
     @database_sync_to_async
-    def _get_channel(self, channel_id: str) -> Optional[Channel]:
-        """Retrieve channel from database."""
-        try:
-            return Channel.objects.get(id=channel_id)
-        except Channel.DoesNotExist:
-            return None
+    def _get_channel_for_user(self, channel_id: str) -> Channel:
+        return services.get_channel_for_user(self.user, channel_id)
 
     @database_sync_to_async
     def _save_message(
-        self, content: str, message_type: str, metadata: Dict[str, Any] = None
+        self,
+        content: str,
+        message_type: str,
+        metadata: Dict[str, Any] = None,
+        client_message_id: str = None,
+        client_mutation_id: str = None,
     ) -> Message:
-        """Save message to database."""
-        if metadata is None:
-            metadata = {}
-
-        message = Message.objects.create(
-            sender=self.user,
-            channel=self.channel,
+        return services.create_message(
+            user=self.user,
+            channel_id=str(self.channel.id),
             content=content,
             message_type=message_type,
             metadata=metadata,
+            client_message_id=client_message_id,
+            client_mutation_id=client_mutation_id,
         )
-        return message
 
     @database_sync_to_async
     def _save_reaction(self, message_id: str, emoji: str):

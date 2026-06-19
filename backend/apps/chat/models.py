@@ -4,6 +4,8 @@ from apps.user.models import User
 from apps.channel.models import Channel
 import uuid
 
+from django.db.models import Q
+
 
 class MessageType(models.TextChoices):
     """Enumeration of supported message types for modularity."""
@@ -49,6 +51,27 @@ class Message(models.Model):
         null=True,
         help_text="Type-specific metadata (e.g., reminder_time, alert_level, file_url, etc.)",
     )
+    client_message_id = models.CharField(
+        max_length=255,
+        unique=True,
+        null=True,
+        blank=True,
+        help_text="Client-generated message id used for idempotent create retries",
+    )
+    client_mutation_id = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        db_index=True,
+        help_text="Client-generated mutation id used for retry traceability",
+    )
+    server_sequence = models.PositiveBigIntegerField(
+        null=True,
+        blank=True,
+        help_text="Monotonic per-channel sequence used for sync ordering",
+    )
+    version = models.PositiveIntegerField(default=1)
+    deleted_at = models.DateTimeField(null=True, blank=True)
     is_edited = models.BooleanField(default=False)
     edited_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -60,6 +83,15 @@ class Message(models.Model):
             models.Index(fields=["channel", "-created_at"]),
             models.Index(fields=["sender", "-created_at"]),
             models.Index(fields=["message_type"]),
+            models.Index(fields=["channel", "server_sequence"]),
+            models.Index(fields=["channel", "deleted_at"]),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["channel", "server_sequence"],
+                condition=Q(server_sequence__isnull=False),
+                name="unique_message_channel_sequence",
+            )
         ]
 
     def __str__(self):
